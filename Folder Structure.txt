@@ -1,0 +1,15 @@
+All combinations and corresponding encodings are given in PubMed/_index.txt.
+	[keyword A, keyword B]: A[#]/B[#]
+
+Each folder in PubMed/A[#]/B[#]/ contains index.txt and download_links.txt
+	index.txt contains a brief description for each article.
+		<TIL> / title
+		<ABS> / abstract
+		<PMID> / PubMed ID
+		<DOI> / Document ID
+	download_links.txt contains the downloadable urls for each article title if they have doi's.
+		[title]: [url]
+
+Note:
+	1. not every article has a doi, so these articles don't have a url attached.
+	2. for each url, there is a chance that sci-hub does not have the corresponding article.
