@@ -5,8 +5,9 @@ from concurrent.futures import ThreadPoolExecutor
 from Bio import Entrez
 import numpy as np
 import os
+import traceback
 
-max_retry = 10
+max_retry = 3
 
 # extract and index keywords
 def keyword(filepath='./Keywords for Systematic Review Analysis for Trauma by DV-01-29-2020.docx'):
@@ -29,7 +30,7 @@ def keyword(filepath='./Keywords for Systematic Review Analysis for Trauma by DV
     		exclude = t.text[t.text.index(':')+2:].split(', ')
     		break
     	else:
-    		container[count[0]] = t.text.strip()
+    		container[count[0]] = t.text.strip().lower()
     		count[0] += 1
     
     return first_keyword, second_keyword, exclude
@@ -72,55 +73,46 @@ def worker(first, second, filepath):
 				results = Entrez.read(handle)
 				id_list = results['IdList']
 				# fetch the details for all the retrieved articles
-				if len(id_list) == 1:
-					count = 1
+				if len(id_list) > 0:
 					handle = Entrez.efetch(db='pubmed',
 				                           retmode='xml',
 				                           id=id_list[0])
-					r = Entrez.read(handle)['PubmedArticle'][0]
-					with open('{}/index.txt'.format(filepath), 'w', encoding='utf-8') as f:
-						with open('{}/download_links.txt'.format(filepath), 'w', encoding='utf-8') as f2:
-							f.write("<TIL>{}\n<ABS>{}\n<PMID>{}\n<DOI>{}\n".format(
-								r['MedlineCitation']['Article']['ArticleTitle'],
-								' '.join([str(x) for x in r['MedlineCitation']['Article']['Abstract']['AbstractText']]) if 'Abstract' in r['MedlineCitation']['Article'] else '',
-								r['PubmedData']['ArticleIdList'][0],
-								str(r['MedlineCitation']['Article']['ELocationID'][-1]) if 'ELocationID' in r['MedlineCitation']['Article'] and r['MedlineCitation']['Article']['ELocationID'] else ''
-							))
-							f2.write('{}: {}\n'.format(
-								r['MedlineCitation']['Article']['ArticleTitle'], 
-								'sci-hub.tw/{}'.format(str(r['MedlineCitation']['Article']['ELocationID'][-1])) if 'ELocationID' in r['MedlineCitation']['Article'] and r['MedlineCitation']['Article']['ELocationID'] else ''
-							))
-				elif len(id_list) > 1:
-					with open('{}/index.txt'.format(filepath), 'w', encoding='utf-8') as f:
-						with open('{}/download_links.txt'.format(filepath), 'w', encoding='utf-8') as f2:
-							remaining = 0
-							while remaining < count-1:
-								handle = Entrez.efetch(db='pubmed',
-							                           retmode='xml',
-							                           id=','.join(id_list[remaining:]))
-								results = Entrez.read(handle)
-								for r in results['PubmedArticle']:
-									f.write("<TIL>{}\n<ABS>{}\n<PMID>{}\n<DOI>{}\n".format(
-										r['MedlineCitation']['Article']['ArticleTitle'],
-										' '.join([str(x) for x in r['MedlineCitation']['Article']['Abstract']['AbstractText']]) if 'Abstract' in r['MedlineCitation']['Article'] else '',
-										r['PubmedData']['ArticleIdList'][0],
-										str(r['MedlineCitation']['Article']['ELocationID'][-1]) if 'ELocationID' in r['MedlineCitation']['Article'] and r['MedlineCitation']['Article']['ELocationID'] else ''
-									))
-									f2.write('{}: {}\n'.format(
-										r['MedlineCitation']['Article']['ArticleTitle'], 
-										'sci-hub.tw/{}'.format(str(r['MedlineCitation']['Article']['ELocationID'][-1])) if 'ELocationID' in r['MedlineCitation']['Article'] and r['MedlineCitation']['Article']['ELocationID'] else ''
-									))
-								remaining += len(results['PubmedArticle'])
+					r = Entrez.read(handle)['PubmedArticle']
+					if r:
+						with open('{}/index.txt'.format(filepath), 'w', encoding='utf-8') as f:
+							with open('{}/download_links.txt'.format(filepath), 'w', encoding='utf-8') as f2:
+								remaining = 0
+								while remaining < count:
+									handle = Entrez.efetch(db='pubmed',
+								                           retmode='xml',
+								                           id=','.join(id_list[remaining:]))
+									results = Entrez.read(handle)
+									for r in results['PubmedArticle']:
+										f.write("<TIL>{}\n<ABS>{}\n<PMID>{}\n<DOI>{}\n".format(
+											r['MedlineCitation']['Article']['ArticleTitle'],
+											' '.join([str(x) for x in r['MedlineCitation']['Article']['Abstract']['AbstractText']]) if 'Abstract' in r['MedlineCitation']['Article'] else '',
+											r['PubmedData']['ArticleIdList'][0],
+											str(r['MedlineCitation']['Article']['ELocationID'][-1]) if 'ELocationID' in r['MedlineCitation']['Article'] and r['MedlineCitation']['Article']['ELocationID'] else ''
+										))
+										f2.write('{}: {}\n'.format(
+											r['MedlineCitation']['Article']['ArticleTitle'], 
+											'sci-hub.tw/{}'.format(str(r['MedlineCitation']['Article']['ELocationID'][-1])) if 'ELocationID' in r['MedlineCitation']['Article'] and r['MedlineCitation']['Article']['ELocationID'] else ''
+										))
+									remaining += len(results['PubmedArticle'])
+					else:
+						count = 0
 				else:
 					count = 0
 				print('SUCCESS: "{}, {}" -> {}\n'.format(first, second, count), end='')
 				return count
 			except Exception as e:
-				print('WARNING: Retrying keywords "{}" and "{}"\n'.format(first, second), e, end='')
+				print('WARNING: Retrying keywords "{}" and "{}": {}\n'.format(first, second, e), end='')
+				# traceback.print_exc()
 				continue
-		print('ERROR: Unable to search with keywords "{}" and "{}"\n'.format(first, second), end='')
+		print('ERROR: "{}" and "{}"\n'.format(first, second), end='')
 	except Exception as e:
-		print('ERROR: Unable to search with keywords "{}" and "{}"\n'.format(first, second), e, end='')
+		print('ERROR: "{}" and "{}": {}\n'.format(first, second, e), end='')
+		# traceback.print_exc()
 
 	return count
 
@@ -135,12 +127,13 @@ def search(first_keyword, second_keyword, exclude):
 					os.mkdir('PubMed/A{}'.format(i))
 				mat[i][0] = first_keyword[i]
 				for j in range(1, mat.shape[1]):
-					if not os.path.exists('PubMed/A{}/B{}'.format(i, j-1)):
-						os.mkdir('PubMed/A{}/B{}'.format(i, j-1))
 					f.write('"{}", "{}": A{}/B{}\n'.format(first_keyword[i], second_keyword[j-1], i, j-1))
+					# check if combination should be excluded
 					if '{} {}'.format(first_keyword[i], second_keyword[j-1]) in exclude:
 						mat[i][j] = 0
 					else:
+						if not os.path.exists('PubMed/A{}/B{}'.format(i, j-1)):
+							os.mkdir('PubMed/A{}/B{}'.format(i, j-1))
 						mat[i][j] = (executor.submit(worker, first_keyword[i], second_keyword[j-1], 'PubMed/A{}/B{}'.format(i, j-1)))
 
 	return mat
@@ -149,12 +142,23 @@ def search(first_keyword, second_keyword, exclude):
 def write_result_count(first_keyword, second_keyword, mat):
 	import pandas as pd 
 	np.savetxt('raw_search_count.csv', mat, delimiter=',', header=','.join(['']+[second_keyword[i] for i in range(len(second_keyword.keys()))]), fmt=['%s'] + ['%d']*len(second_keyword.keys()), encoding='utf-8')
-	df = pd.read_csv('search_count.csv', header=0, index_col=0)
+	df = pd.read_csv('raw_search_count.csv', header=0, index_col=0)
 	sample = pd.read_excel(sample_format, header=1, index_col=1, sheet_name='Clustered data')
 	sample = sample.drop(columns=['Unnamed: 0'])
 	df = df.transpose()
 	reordered = df.loc[sample.index, sample.columns]
 	reordered.to_csv('clustered_search_count.csv')
+
+def test():
+	if not os.path.exists('test'):
+		os.mkdir('test')
+	keyword_combo = [
+		("hollow viscus injury", "pathogenic")
+	]
+	for k in keyword_combo:
+		if not os.path.exists('test/{}_{}'.format(k[0], k[1])):
+			os.mkdir('test/{}_{}'.format(k[0], k[1]))
+		worker(*(k), 'test/{}_{}'.format(k[0], k[1]))
 
 def main():
 	first_keyword, second_keyword, exclude = keyword()
