@@ -21,3 +21,7 @@ v1
 -- download_links.txt contains the downloadable urls for each article title if they have doi's.
       	
 	[title]: [url]
+
+V2
+
+- Changed storage to sqlite .db
