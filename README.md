@@ -1,8 +1,13 @@
-v0
+How to run:
 
-- Added functionality for scraping number of search counts for each article.
-- Saved results to .csv
-- Reorganized and clustered results.
+	1. run pubmed.py to scrape article information 
+	2. run aggregate.py to merge databases
+	3. run cleandb.py to remove duplicate entries
+
+V2
+
+- Changed storage to sqlite .db
+- Added scripts for merging databases and cleaning data
 
 v1
 
@@ -22,6 +27,8 @@ v1
       	
 	[title]: [url]
 
-V2
+v0
 
-- Changed storage to sqlite .db
+- Added functionality for scraping number of search counts for each article.
+- Saved results to .csv
+- Reorganized and clustered results.
