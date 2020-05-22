@@ -1,0 +1,254 @@
+5' nucleotidase
+B lymphocytes
+(AFP)
+(ARG1)
+(ASS)
+(ATL)
+(CcK18)
+(CD3)
+(CD4)
+(CD8)
+(EST-1)
+(HLA)-DR
+(KIM-1)
+(LDH)
+(MCSFR)
+(MDH)
+(MODS)
+(NO)
+(NT-proBNP)
+(PaCO2)
+(PAF)
+(PAI)
+(PaO2)
+(PCT)
+(PMN)
+(ROC)
+(SCr)
+(TFF3)
+(TTL)
+(VEGF)
+(VPA)
+(VTE)
+(WBC)
+4-hydroxy-phenylpyruvate dioxygenase (HPD)
+Abbreviated Injury Scale
+Active T lymphocytes
+Albumin
+ALP alkaline phosphatase
+Alpha fetoprotein
+alpha-glutathioneS-transferase
+ALT alanine aminotransferase
+Amylase
+Amyloid A
+APACHE II
+Area under the receiver operating characteristic curve
+Arginase 1
+Arginase-1
+argininosuccinate synthetase
+Arterial partial pressure of carbon dioxide
+Arterial partial pressure of oxygen
+Arterial Ph
+Arterial pressure
+AST aspartate aminotransferase
+AUC
+AUROCs
+Bilirubin
+Biochemical
+Biochemical marker
+Biochemical panel
+Biochemical parameters
+Biomarker panel
+Biomarkers
+Blood pressure
+Blood urine nitrogen
+BNP
+BUN
+C3 complement
+C5a
+Cadherin-5
+Calcium
+Caspase cleaved cytokeratin 18
+CDH5
+Ceruloplasmin
+Chip
+CK-MB
+Clinical factors
+Clinical parameters
+Clinical variable
+Coagulation tests
+Collagen IV
+Complement
+Complement factor B
+Complete blood counts
+Computed tomogram
+Computed tomographic scanning
+Computed tomography
+C-reactive protein
+Creatine kinase
+Creatine kinase muscle and brain
+Creatinine
+CRP
+CT scan
+CTnI
+CXCL10
+CXCR3
+Cystatin C
+Cystatin-C
+Cytokeratin 18
+D-Dimer
+Diagnosis
+Diagnostic
+Diagnostic modelling
+EGFR
+Estimated glomerular filtration rate
+Estrogen sulfotransferase
+F- Protein
+FABP
+FABP1
+FABPs
+Fatty Acid Binding Protein
+Fatty acid binding protein 1
+FDP
+Fibrin degradation products
+Fibrin fibrinogen degradation products
+Fibrinogen
+Fibtem
+Full blood cell count
+Gamma glutamyl transferase
+Glasgow Coma Scale
+GLDH
+Glucose
+Glutamate dehydrogenase
+Glutathione S-transferase alpha
+Glutathione S-transferases (GST)
+GSTA
+GSTα
+Heart rate
+Helper T cells
+Hematocrite
+Hemoglobin
+High Mobility Group Box-1
+HMGB1
+Howell–Jolly bodies
+HPPD
+hsCRP
+hs-CRP
+Human leucocyte antigen
+Hyaluronic Acid
+I-FABP
+IgA
+IgG
+IgM
+IL-10
+IL-18
+IL-6
+IL-8
+Imaging
+Immunoglobulins
+Independent predictors
+Injury severity score
+Intestinal-FABP
+IP-10
+ISS
+Jolly bodies
+K18
+Kidney injury molecule-1
+Laboratory parameters
+Laboratory tests
+Lactate
+Lactate dehydrogenase
+LECT2
+Leucocyte cell-derived chemotaxin-2
+L-FABP
+Lipase
+Lipocalin
+Liver enzyme tests
+Liver-FABP
+Lymphocytes
+Macrophage colony stimulating factor receptor
+malate dehydrogenase
+Marker
+Mean arterial BP
+microRNA-122
+MicroRNAs
+miR-122
+miR-216a
+miR-216b
+miR-217
+miRNAs
+Molecular biomarker
+Molecular markers
+Multiple organ dysfunction score
+Myeloperoxidase
+Myoglobin
+N-acetyl-β-D-glucosaminidase
+Neutrophil Gelatinase-Associated Lipocalin
+Neutrophils
+NGAL
+N-GAL
+NISS
+Nitric oxide
+Novel markers
+N-terminal pro-B-type natriuretic peptide
+Nuclear fragments in circulating erythrocytes
+Odd ratio
+OPN
+Osteopontin
+PaO2
+Parameters
+Paraoxonase 1 normalized to prothrombin protein
+Paraxonase 1
+Pathogenic
+Pathologic
+Phosphate
+Physiologic
+Plasminogen activator inhibitor
+Platelet count
+Platelet-activating factor
+Platelets
+Platelets and pH-value
+PNP
+Point of care
+Polymorphonuclear elastase
+Polymorpho-nuclear neutrophil elastase
+PON1
+Potassium
+Procalcitonin
+Properdin
+Protein C
+Prothrombin time
+Purine nucleoside phosphorylase
+Receiver operating characteristic curves
+Red cell count
+Respiration rate
+Revised Trauma score
+Risk factors
+Screening methods
+SDH
+Sequential organ failure assessment
+Sodium
+SOFA
+Sorbitol dehydrogenase
+Suppressor T-cells
+Temperature
+Test
+Testing
+The post-traumatic plasma levels of soluble tumor necrosis factor receptors p55 and p75
+Total and segmented leukocytes
+Total T lymphocytes
+Trauma scoring systems
+Trefoil Factor 3
+TRISS
+Troponin
+Trypsin-2-a1antitrypsin complex
+Trypsin-2-AAT
+Trypsinogen-2
+Tuftsin
+Ultrasound
+Urea
+Valproic acid
+Vascular endothelial growth factor
+Venous thromboembolism
+White blood cell count
+α-fetoprotein
