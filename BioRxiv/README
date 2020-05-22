@@ -1,0 +1,19 @@
+Execution:
+-The script will run in iterations of 5 biomarkers, and all keywords with the csv file named by the ending index
+of the biomarker. Should the script crash, this prevents all data being lost.
+
+-If there is an article that is unable to load, that is being read and the browser stops responding, or that 
+experiences some other issue it will be stored in an error file that is named in the same manner to the correct csv file that 
+it should be in. If these files are not empty after execution, the script can be run to find these specific articles to 
+get the data.
+
+
+Issues:
+-Even though python scripts can execute while the computer sleeps, selenium has trouble with connectivity after long periods of 
+time and so the script will begin to crash if the script is not stopped every so often. This is another reason to find an API that
+will no longer require a web scraper.
+
+
+To Do:
+-Find an appropriate API to replace the need for web scrapers, and implement the code accordingly.
+
