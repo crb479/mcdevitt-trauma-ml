@@ -2,7 +2,7 @@ How to run:
 
 	1. customize parameters in pubmed_article_info.py for filepaths
 	2. run "python pubmed_article_info.py"
-  3. (optional) use SQLiteStudio to convert files from .csv to .db
+	3. (optional) use SQLiteStudio to convert files from .csv to .db
   
 V3
 
