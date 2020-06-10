@@ -9,6 +9,7 @@ V3
 - Changed file structures for storing results
 - Changed keyword extension to .xlsx
 - Changed storage format of article information to csv
+- Enforced searches to include only articles that contain the exact keywords, not fragments.
 
 V2
 
