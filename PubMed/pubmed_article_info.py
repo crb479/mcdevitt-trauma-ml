@@ -149,5 +149,5 @@ def main(keyword_file, main_folder, email=None, num_retry=3, batch_size=100000):
 	return 1
 
 if __name__ == '__main__':
-	# main('./Keywords.xlsx', 'pubmed', email='david.shaw@nyu.edu')
+	main('./Keywords.xlsx', 'pubmed', email='david.shaw@nyu.edu')
 	custom_reformat_csv()
