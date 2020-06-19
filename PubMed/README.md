@@ -46,7 +46,7 @@
 
     (After pubmed_ftp_download.py) A collection of the PDFs, which are stored in folders named with their PubMed IDs. Each folder contains a copy of the correponding PDF and pictures of the tables and images in the PDFs, along with a .nxml file.
 
-    (After pubmed_separate_downloads.py) The remaining downloaded folders that *DO NOT* contain PDFs. These folders are have missing filepaths in downloads_summary.csv
+    (After pubmed_separate_downloads.py) The remaining downloaded folders that *DO NOT* contain PDFs. These folders also have missing filepaths in downloads_summary.csv
 
 *Human Studies*
 
