@@ -1,4 +1,5 @@
 **INPUT**
+
 *keywords.xlsx*
 Lists of keywords and phrases to exclude.
 
@@ -9,6 +10,7 @@ Index file from PubMed. It specifies the directories of PDFs on their FTP server
 Listed of accepted keywords for human-related and animal-related studies, and accepted paper types.
 
 **SCRIPT**
+
 *pubmed_downloaded_openaccess.py*
 Combine columns of articles.csv and oa_file_list.csv for a general overview of license information for articles that were found by the search functions and are available on PubMed FTP. The final results are stored in OpenAccess.csv.
 
@@ -27,6 +29,7 @@ Find and record article information and abstracts for each articles found, using
 custom_reformat_csv() changes how counts.csv looks and stores the changes in counts_reordered.csv.
 
 **OUPUT**
+
 *PDF.zip*
 An archive of all downloaded PDFs from PubMed FTP service. This is manually added.
 
