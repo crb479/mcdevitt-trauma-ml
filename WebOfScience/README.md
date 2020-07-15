@@ -1,6 +1,6 @@
 These scripts were built to compile data from Web of Science and download the PDF's using Kopernio.
 
-# Data collection for the keywords heatmap
+# Data collection for the keywords heatmap(wos_heatmap_scraper.py)
 Given the list of keywords this scraper runs through the Web of Science Advanced Search with the possible 
 keyword combinations and stores the number of results for the search. The final results are stored in 'wos_heatmap_data.csv'.
 
