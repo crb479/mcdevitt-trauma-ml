@@ -10,7 +10,7 @@
 
 *exclusion_criteria.xlsx*
 
-    Listed of accepted keywords for human-related and animal-related studies, and accepted paper types.
+    Listed of accepted keywords for human-related and animal-related studies, accepted paper types, and study designs.
 
 **SCRIPT**
 
@@ -35,6 +35,10 @@
     Find and record article information and abstracts for each articles found, using PubMed API from Bio.Entrez. The searches are strict in that the returned articles must contain the keywords in their entirety. The keywords used in the search are specified in keywords.xlsx. The results are stored in articles.csv, abstracts.csv, and counts.csv.
 
     custom_reformat_csv() changes how counts.csv looks and stores the changes in counts_reordered.csv.
+
+*pubmed_human_study_design_split.py*
+    
+    Label the human studies with study designs based on the design keywords from exclusion_criteria.xlsx. The results are stored in human_study_desgin_label.csv.
 
 **OUPUT**
 
@@ -83,3 +87,7 @@
 *downloads_summary.csv*
 
     Aggregated information for downloaded PDF folders with relevant license information and statistics for rejection.
+
+*human_study_desgin_label.csv*
+
+    Study design labels for each PDF classified as human study.
