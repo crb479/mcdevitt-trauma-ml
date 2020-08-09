@@ -66,8 +66,28 @@ def get_word_count(path):
 	doc.close()
 	return num_trauma
 
-def create_summary():
-	index = pd.read_csv('articles.csv')[['PMID', 'TITLE', 'TYPE']].drop_duplicates(subset='PMID')
+def find_pdf(path):
+	pdfs = glob(os.path.join(path, '*.pdf'))
+
+	# in some rare scenarios, an archive can contain more than one PDF.
+	if len(pdfs) == 0:
+		pdf = None
+	elif len(pdfs) > 1:
+		title = index.TITLE[index.PMID == pmid].values[0][:-1].lower() # PubMed API adds a period to the end of each title
+		for x in pdfs:
+			doc = fitz.open(x)
+			first_page = doc[0].getTextPage().extractText().lower().replace('\n', ' ')
+			doc.close()
+			if first_page.find(title) > -1:
+				pdf = x
+				break
+	else:
+		pdf = pdfs[0]
+
+	return pdf
+
+def create_summary(in_path, out_path):
+	index = pd.read_csv(in_path)[['PMID', 'TITLE', 'TYPE']].drop_duplicates(subset='PMID')
 
 	pmids = []
 	pdf_paths = []
@@ -82,20 +102,7 @@ def create_summary():
 		pdfs = glob(os.path.join(path, '*.pdf'))
 
 		# in some rare scenarios, an archive can contain more than one PDF.
-		if len(pdfs) == 0:
-			pdf = None
-		elif len(pdfs) > 1:
-			title = index.TITLE[index.PMID == pmid].values[0][:-1].lower() # PubMed API adds a period to the end of each title
-			for x in pdfs:
-				doc = fitz.open(x)
-				first_page = doc[0].getTextPage().extractText().lower().replace('\n', ' ')
-				doc.close()
-				if first_page.find(title) > -1:
-					pdf = x
-					break
-		else:
-			pdf = pdfs[0]
-
+		pdf = find_pdf(path)
 		study_type = get_subject_type(pdf)
 		trauma_count = get_word_count(pdf)
 		status, log = get_rejection_status(paper_type, trauma_count)
@@ -119,7 +126,7 @@ def create_summary():
 	})
 	summary = summary.merge(index, on='PMID', how='left')
 	summary = summary.rename(columns={'TYPE': 'PAPER_TYPE'})
-	summary[['PMID', 'TITLE', 'FILEPATH', 'PAPER_TYPE', 'STUDY_TYPE', 'trauma_counts', 'rejected', 'rejection_log']].to_csv('downloads_summary.csv')
+	summary[['PMID', 'TITLE', 'FILEPATH', 'PAPER_TYPE', 'STUDY_TYPE', 'trauma_counts', 'rejected', 'rejection_log']].to_csv(out_path)
 	
 if __name__ == '__main__':
 	PDF_ROOT = 'PDF'
@@ -132,4 +139,4 @@ if __name__ == '__main__':
 	word='trauma'
 	threshold = 3
 
-	create_summary()
+	create_summary('articles.csv', 'downloads_summary.csv')
