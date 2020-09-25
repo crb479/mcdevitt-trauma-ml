@@ -1,0 +1,1 @@
+__doc__ = "``__init__.py`` for ``mtml`` package."
