@@ -1,0 +1,65 @@
+biomarker,mortality_auc,biomarker,mof_auc
+ GCS (ED arrival),0.85,iss,0.83
+ais head1,0.84,ais head1,0.77
+iss,0.81,ais extremity5,0.7
+hr0_pt,0.77,hepatic failure,0.68
+hr0_ptt,0.77,hr0_D-Dimer,0.67
+hr0_D-Dimer,0.77, GCS (ED arrival),0.66
+hr0_inr,0.73,hr0_hgb,0.66
+immuno-suppression,0.72,hr0_pt,0.65
+hepatic failure,0.71,hr0_pH,0.64
+hr0_factorv,0.7,hr0_factorv,0.64
+hr0_temperature,0.69,ais chest3,0.63
+hr0_factorii,0.68,smoking status,0.62
+smoking status,0.66,hr0_temperature,0.61
+hr0_BUN,0.66,albumin,0.59
+ais face2,0.65,hr0_inr,0.59
+hr0_hgb,0.65,coagulopathy,0.59
+hr0_hct,0.65,hr0_respiratory rate,0.58
+hr0_pt_rlab,0.64,hr0_creatinine,0.58
+hr0_factorix,0.64,hr0_wbc,0.58
+hr0_plts,0.63,hr0_factorii,0.58
+hr0_ptt_rlab,0.63,latino,0.57
+age,0.62,ais face2,0.57
+hr0_pH,0.62,aids,0.56
+hr0_SBP,0.6,hr0_ptt,0.56
+hr0_lactate,0.6,hr0_factorvii,0.56
+ais abdomen4,0.59,hr0_tfpi,0.56
+albumin,0.59,age,0.55
+hr0_creatinine,0.59,immuno-suppression,0.55
+hr0_wbc,0.59,hr0_heart rate,0.55
+ais chest3,0.58,hr0_SBP,0.55
+hr0_paCO2,0.58,hr0_lactate,0.55
+hr0_tfpi,0.58,hr0_atiii,0.55
+hr0_atiii,0.58,race,0.54
+latino,0.57,cirrhosis,0.54
+hr0_factorviii,0.57,hr0_HCO3,0.54
+coagulopathy,0.57,day1_urine output total (ml),0.54
+malignancy,0.56,hr0_BUN,0.54
+hr0_serum CO2,0.56,hr0_plts,0.54
+hr0_respiratory rate,0.55,hr0_factorx,0.54
+hiv,0.54,hr0_hct,0.53
+ais extremity5,0.54,hr0_fibrinogen,0.53
+APACHE-2,0.54,hr0_factorviii,0.53
+hr0_factorx,0.54,hr0_Protein C,0.53
+cad,0.53,hiv,0.52
+cirrhosis,0.53,ais skin6,0.52
+hr0_Protein C,0.53,hr0_pt_rlab,0.52
+bmi,0.52,esrd dialysis,0.51
+copd,0.52,ais abdomen4,0.51
+day1_urine output total (ml),0.52,bmi,0.5
+diabetes,0.51,copd,0.5
+hr0_paO2,0.51,ild,0.5
+day1_bilirubin,0.51,other chronic lung disease,0.5
+hr0_fibrinogen,0.51,hr0_paCO2,0.5
+ild,0.5,day1_bilirubin,0.5
+other chronic lung disease,0.5,hr0_factorix,0.5
+chf,0.5,cad,0.49
+esrd dialysis,0.5,chf,0.49
+hr0_heart rate,0.5,hr0_serum CO2,0.49
+asthma,0.49,diabetes,0.48
+hr0_HCO3,0.48,malignancy,0.48
+aids,0.44,APACHE-2,0.48
+race,0.41,asthma,0.47
+hr0_factorvii,0.4,hr0_ptt_rlab,0.47
+ais skin6,0.39,hr0_paO2,0.43
