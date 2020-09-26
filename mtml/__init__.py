@@ -1,5 +1,7 @@
 __doc__ = "``__init__.py`` for ``mtml`` package."
 
+import os.path
+
 # useful global constants
 trauma_score_cols = (
     "ais head1", "ais face2", "ais chest3", "ais abdomen4", "ais extremity5",
@@ -29,3 +31,10 @@ lab_panel_cols = (
     "hr0_Protein C", "hr0_D-Dimer"
 )
 "Lab panel column labels."
+
+sf_num_data_prep_path = (os.path.dirname(os.path.abspath(__file__)) +
+                         "/../data/prep/sf_trauma_data_num.csv")
+"""Path to the (minimally) preprocssed SF hospital trauma data.
+
+See the ``README.rst`` in the ``data`` directory for more details.
+"""
