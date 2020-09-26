@@ -4,19 +4,6 @@ import numpy as np
 import pandas as pd
 import re
 
-trauma_score_cols = (
-    "ais head1", "ais face2", "ais chest3", "ais abdomen4", "ais extremity5",
-    "ais skin6", "iss", "APACHE-2", "GCS (ED arrival)"
-)
-"Labels for trauma score columns to drop from data set."
-
-disease_comorb_cols = (
-    "hiv", "aids", "hepatic failure", "immuno-suppression", "asthma", "copd",
-    "ild", "other chronic lung disease", "cad", "chf", "esrd dialysis",
-    "cirrhosis", "diabetes", "malignancy"
-)
-"Pre-existing disease and comorbidity column labels."
-
 mangled_dup_re = r"^.+\.[0-9]+$"
 r"Regular expression for matching ``pandas``\ -mangled duplicate columns."
 
