@@ -4,7 +4,7 @@ data
 ====
 
 Contains CSV data for patient model development. None of these files are too
-big (all less than 50 MB) and so do not need to be uploaded via Git LFS.
+big and so do not need to be uploaded via Git LFS.
 
 
 Raw data
