@@ -29,24 +29,29 @@ from sklearn.model_selection import train_test_split
 from .. import sf_num_data_prep_path, vitals_cols
 
 
-def vitals_factory(targets, transform = None, transform_kwargs = None,
-                   test_size = 0.25, shuffle = True, random_state = None):
-    """Factory for generating classification problems using vitals data.
+def spl_factory(inputs, targets, target_transform = None,
+                target_transform_kwargs = None, test_size = 0.25,
+                shuffle = True, random_state = None):
+    """Factory for generating supervised problems using different data.
     
     Uses :func:`~sklearn.model_selection.train_test_split` for splitting data
     from ``data/prep/sf_trauma_data_num.csv`` into train/validation sets.
     
+    :param inputs: List of string column names in
+        ``data/prep/sf_trauma_data_num.csv`` to use as input variable data.
+    :type inputs: iterable
     :param targets: List of string column names in
-        ``data/prep/sf_trauma_data_num.csv``, ex. ``["mortality at disch"]``.
+        ``data/prep/sf_trauma_data_num.csv``, ex. ``["mortality at disch"]``,
+        to use as response variable data.
     :type targets: iterable
-    :param transform: Function to transform the given columns, which will be
-        passed as a :class:`~pandas.DataFrame` into ``transform`` as a
+    :param target_transform: Function to transform the given columns, which will
+        be passed as a :class:`~pandas.DataFrame` into ``transform`` as a
         positional argument with keyword arguments from ``transform_kwargs``.
         ``transform`` should return a :class:`numpy.ndarray`, either a flat
         vector or a 2D matrix.
-    :type transform: function, optional
-    :param transform_kwargs: Keyword arguments to pass to ``transform``.
-    :type transform_kwargs: dict, optional
+    :type target_transform: function, optional
+    :param target_transform_kwargs: Keyword arguments to pass to ``transform``.
+    :type target_transform_kwargs: dict, optional
     :param test_size: Float in ``[0, 1]`` to represent fraction of points to
         use for validation data or an int to represent number of points to use
         for validation data. Passed directly to
@@ -68,16 +73,16 @@ def vitals_factory(targets, transform = None, transform_kwargs = None,
         raise ValueError("targets is None")
     # if no transform is provided, set as function that returns the underlying
     # numpy array backing the DataFrame/Series
-    if transform is None:
-        transform = lambda x: x.values
-    if transform_kwargs is None:
-        transform_kwargs = {}
+    if target_transform is None:
+        target_transform = lambda x: x.values
+    if target_transform_kwargs is None:
+        target_transform_kwargs = {}
     # load data/prep/sf_trauma_data_num.csv
     df = pd.read_csv(sf_num_data_prep_path)
-    # extract vitals columns
-    X = df.loc[:, vitals_cols]
+    # extract inputs columns
+    X = df.loc[:, inputs]
     # choose targets and apply transform
-    y = transform(df.loc[:, targets], **transform_kwargs)
+    y = target_transform(df.loc[:, targets], **target_transform_kwargs)
     # flatten if shape is not 1D. more than 2D output is not supported.
     if len(y.shape) == 1:
         pass
@@ -119,9 +124,10 @@ def cls_vitals_trauma(test_size = 0.25, shuffle = True, random_state = None):
     def make_trauma_feature(ar):
         return np.array(list(map(lambda x: 1 if x > 15 else 0, ar.values)))
     # use factory method
-    return vitals_factory(["iss"], transform = make_trauma_feature,
-                          test_size = test_size, shuffle = shuffle,
-                          random_state = random_state)
+    return spl_factory(vitals_cols, ["iss"],
+                       target_transform = make_trauma_feature,
+                       test_size = test_size, shuffle = shuffle,
+                       random_state = random_state)
 
 
 def cls_vitals_mort(test_size = 0.25, shuffle = True, random_state = None):
@@ -146,8 +152,9 @@ def cls_vitals_mort(test_size = 0.25, shuffle = True, random_state = None):
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    return vitals_factory(["mortality at disch"], test_size = test_size,
-                          shuffle = shuffle, random_state = random_state)
+    return spl_factory(vitals_cols, ["mortality at disch"],
+                       test_size = test_size, shuffle = shuffle,
+                       random_state = random_state)
 
 
 def cls_vitals_mof(test_size = 0.25, shuffle = True, random_state = None):
@@ -172,5 +179,5 @@ def cls_vitals_mof(test_size = 0.25, shuffle = True, random_state = None):
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    return vitals_factory(["mof"], test_size = test_size, shuffle = shuffle,
-                          random_state = random_state)
+    return spl_factory(vitals_cols, ["mof"], test_size = test_size,
+                       shuffle = shuffle, random_state = random_state)
