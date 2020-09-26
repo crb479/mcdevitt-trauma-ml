@@ -23,17 +23,17 @@ AUC_withNA.csv
 AUC_withoutNA.csv
    Shape ``(64, 4)``. Gives univariate AUC for SF hospital trauma data for
    mortality and multiple organ failure. AUCs are sorted in descending order, as
-   there are two different biomarker columns for each AUC type. Columns are
-   ``biomarker``, ``mortality_auc``, ``biomarker`` [#]_, and ``mof_auc``.
+   there are two biomarker columns for each AUC type. Columns are ``biomarker``,
+   ``mortality_auc``, ``biomarker`` [#]_, and ``mof_auc``.
 
 sf_trauma_data_num_raw.csv
    Shape ``(1494, 90)``. The raw numerical SF hospital patient trauma data,
    corresponding to the ``numerical variables- T-0`` sheet in the ``SF Hospital
    trauma data-v2.xlsx`` located on the Google Drive, with the top row removed.
    Columns include ``male``, ``age``, ``hr0_D-Dimer``, etc. Note that
-   pre-existing disease/morbidity columns are actually repeated [#]__, so for
+   pre-existing disease/morbidity columns are actually repeated [#]_, so for
    example, the columns ``immuno-suppression`` and ``immuno-suppression.1`` will
-   show up if the file is loaded with ``pandas.read_csv`` [#]__. Note that the
+   show up if the file is loaded with ``pandas.read_csv`` [#]_. Note that the
    ``esrddialysis`` column has been renamed ``esrd dialysis`` to ensure
    consistency with the rest of the duplicated pre-existing disease/morbidity
    columns.
@@ -81,5 +81,4 @@ sf_trauma_data_num.csv
    Shape ``(1494, 76)``. The numerical SF hospital patient trauma data in
    ``data/sf_trauma_data_num_raw.csv`` with the last 14 duplicate columns
    and trauma scorer columns (``iss``, ``APACHE-2``, etc.) removed, ``"Yes"``
-   and ``"No"`` changed to ``1`` and ``0`` respectively. The minimal
-   preprocessing is intentional.
+   and ``"No"`` changed to ``1`` and ``0`` respectively.
