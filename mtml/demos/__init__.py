@@ -1,0 +1,1 @@
+__doc__ = "Subpackage for demo scripts."
