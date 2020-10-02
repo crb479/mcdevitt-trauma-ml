@@ -1,0 +1,2 @@
+include mtml/data/files/README.rst
+recursive-include mtml/data/files/prep *.csv 
