@@ -180,10 +180,12 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
             pickle.dump(mdata, bf)
         # save hyperparameters as JSON
         with open(our_path + "/vitals_models_params.json", "w") as jf:
-            json.dump(mparams, jf)
+            # use indent to pretty print
+            json.dump(mparams, jf, indent = 4)
         # save report as JSON
         for cp, cscores in scores_dict.items():
-            cscores.to_csv(our_path + "/vitals_" + cp + ".csv", index = False)
+            # need to print index to identify model
+            cscores.to_csv(our_path + "/vitals_" + cp + ".csv")
     # return mdata to caller
     return mdata
 
@@ -191,5 +193,6 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
 if __name__ == "__main__":
     # fit models and show scores of best cross-validated model
     # doesn't work if run from command line due to package discovery failure
+    # reproduce original results using random_state = np.random.RandomState(7)
     #_ = fit_classifiers_dropna(verbose = True, report = True)
     pass
