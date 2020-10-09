@@ -15,8 +15,14 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 from ..data.sf_trauma import cls_vitals_mof, cls_vitals_mort, cls_vitals_trauma
+from ..modeling.utils import persist_pickle
+
+# get file's absolute path
+our_path = os.path.dirname(os.path.abspath(__file__))
 
 
+@persist_pickle(target = our_path + "/vitals_models.pickle",
+                persist_func = lambda x: x[0])
 def fit_classifiers_dropna(use_memory = False, random_state = None,
                            scaler = "standard", cv = 3, n_jobs = -1, 
                            persist = False, verbose = False, report = False):
@@ -52,10 +58,17 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
     :type verbose: bool, optional
     :param report: If ``True``, print to stdout a report on model scores.
     :type report: bool, optional
-    :returns: A dict of 3 dicts, each corresponding to a classification problem,
-        each dict with 3 key-value mappings containing one of the three model
-        types mentioned in the beginning of the docstring.
-    :rtype: dict
+    :returns: A tuple of 3 dicts. The first is ``mdata``, dict of 3 dicts, each
+        corresponding to a classification problem, each dict with 3 key-value
+        mappings containing one of the three model types mentioned in the
+        beginning of the docstring. The second is ``mparams`` a dict of 3 dicts,
+        each corresponding to a classification problem, each dict with 3 key-
+        value mappings containing a list of ``(name, hyperparams)`` tuples for
+        each of the three model types. The last is a dict of 3 DataFrames, each
+        with a 3 x 3 matrix of model types x accuracy + precision + recall for
+        each of the model types, each DataFrame for a particular classification
+        problem.
+    :rtype: tuple
     """
     # globally use a particular scaler
     if scaler == "standard":
@@ -176,8 +189,8 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
         # get file's absolute path
         our_path = os.path.dirname(os.path.abspath(__file__))
         # pickle models
-        with open(our_path + "/vitals_models.pickle", "wb") as bf:
-            pickle.dump(mdata, bf)
+        #with open(our_path + "/vitals_models.pickle", "wb") as bf:
+        #    pickle.dump(mdata, bf)
         # save hyperparameters as JSON
         with open(our_path + "/vitals_models_params.json", "w") as jf:
             # use indent to pretty print
@@ -186,8 +199,8 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
         for cp, cscores in scores_dict.items():
             # need to print index to identify model
             cscores.to_csv(our_path + "/vitals_" + cp + ".csv")
-    # return mdata to caller
-    return mdata
+    # return mdata, mparams, and scores_dict to caller
+    return mdata, mparams, scores_dict
 
 
 if __name__ == "__main__":

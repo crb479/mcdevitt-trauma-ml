@@ -29,7 +29,8 @@ from sklearn.model_selection import train_test_split
 from .. import sf_num_data_prep_path, vitals_cols
 
 
-def spl_factory(inputs, targets, target_transform = None,
+def spl_factory(inputs, targets, data_transform = None,
+                data_transform_kwargs = None,target_transform = None,
                 target_transform_kwargs = None, dropna = False, na_axis = 0,
                 na_how = "any", na_thresh = None, na_subset = None,
                 test_size = 0.25, shuffle = True, random_state = None):
@@ -45,6 +46,11 @@ def spl_factory(inputs, targets, target_transform = None,
         ``data/prep/sf_trauma_data_num.csv``, ex. ``["mortality at disch"]``,
         to use as response variable data.
     :type targets: iterable
+    :param data_transform: Function to transform a :class:`pandas.DataFrame`
+        containing the ``inputs`` columns joined with the ``targets`` columns.
+    :type data_transform: function, optional
+    :param data_transform_kwargs:
+    :type data_transform_kwargs: dict, optional
     :param target_transform: Function to transform the given columns, which will
         be passed as a :class:`~pandas.DataFrame` into ``transform`` as a
         positional argument with keyword arguments from ``transform_kwargs``.
@@ -116,6 +122,21 @@ def spl_factory(inputs, targets, target_transform = None,
     return tuple(out)
 
 
+# function for creating 0/1 trauma feature from pandas Series
+def make_trauma_feature(ser):
+    """Creates 0/1 trauma feature from :class:`pandas.Series` of ISS scores.
+    
+    Note that NaN values are handled correctly, i.e. passed unaffected.
+    
+    :param ser: A :class:`pandas.Series` of ISS scores
+    :type ser: :class:`pandas.Series`
+    :rtype: :class:`numpy.ndarray`
+    """
+    # lambda to perform conversion
+    _conv = lambda x: 1 if x > 15 else (np.nan if np.isnan(x) else 0)
+    return np.array(tuple(map(_conv, ser.values)))
+
+
 def cls_vitals_trauma(test_size = 0.25, shuffle = True, dropna = False,
                       na_axis = 0, na_how = "any", na_thresh = None,
                       na_subset = None, random_state = None):
@@ -150,9 +171,6 @@ def cls_vitals_trauma(test_size = 0.25, shuffle = True, dropna = False,
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    # function for creating 0/1 trauma feature from pandas Series
-    def make_trauma_feature(ar):
-        return np.array(list(map(lambda x: 1 if x > 15 else 0, ar.values)))
     # use factory method
     return spl_factory(vitals_cols, ["iss"],
                        target_transform = make_trauma_feature, dropna = dropna,
