@@ -84,7 +84,7 @@
                     "min_samples_split": 2,
                     "min_weight_fraction_leaf": 0.0,
                     "presort": "deprecated",
-                    "random_state": null,
+                    "random_state": 7,
                     "splitter": "best"
                 }
             ]
@@ -175,7 +175,7 @@
                     "min_samples_split": 2,
                     "min_weight_fraction_leaf": 0.0,
                     "presort": "deprecated",
-                    "random_state": null,
+                    "random_state": 7,
                     "splitter": "best"
                 }
             ]
@@ -266,7 +266,7 @@
                     "min_samples_split": 2,
                     "min_weight_fraction_leaf": 0.0,
                     "presort": "deprecated",
-                    "random_state": null,
+                    "random_state": 7,
                     "splitter": "best"
                 }
             ]

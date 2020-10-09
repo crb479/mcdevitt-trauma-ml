@@ -15,14 +15,18 @@ from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
 from ..data.sf_trauma import cls_vitals_mof, cls_vitals_mort, cls_vitals_trauma
-from ..modeling.utils import persist_pickle
+from ..utils.persist import persist_json, persist_pickle
 
 # get file's absolute path
 our_path = os.path.dirname(os.path.abspath(__file__))
 
 
+@persist_json(target = our_path + "/vitals_models_params.json",
+              enabled = True,
+              out_transform = lambda x: x[1])
 @persist_pickle(target = our_path + "/vitals_models.pickle",
-                persist_func = lambda x: x[0])
+                enabled = True,
+                out_transform = lambda x: x[0])
 def fit_classifiers_dropna(use_memory = False, random_state = None,
                            scaler = "standard", cv = 3, n_jobs = -1, 
                            persist = False, verbose = False, report = False):
@@ -130,8 +134,8 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
         dtc = Pipeline(
             [(scaler_name, scaler()),
              ("grid_search",
-              GridSearchCV(DecisionTreeClassifier(), dtc_grid, cv = cv,
-                           n_jobs = n_jobs, verbose = int(verbose)))]
+              GridSearchCV(DecisionTreeClassifier(random_state = 7), dtc_grid,
+                           cv = cv, n_jobs = n_jobs, verbose = int(verbose)))]
         )
         # fit all pipelines
         lrc.fit(X_train, y_train)
@@ -188,14 +192,7 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
     if persist:
         # get file's absolute path
         our_path = os.path.dirname(os.path.abspath(__file__))
-        # pickle models
-        #with open(our_path + "/vitals_models.pickle", "wb") as bf:
-        #    pickle.dump(mdata, bf)
-        # save hyperparameters as JSON
-        with open(our_path + "/vitals_models_params.json", "w") as jf:
-            # use indent to pretty print
-            json.dump(mparams, jf, indent = 4)
-        # save report as JSON
+        # save score report as CSV
         for cp, cscores in scores_dict.items():
             # need to print index to identify model
             cscores.to_csv(our_path + "/vitals_" + cp + ".csv")
