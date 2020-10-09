@@ -8,8 +8,8 @@ import pickle
 import time
 
 
-def _persist_pickle(func, enabled = True, target = None, persist_func = None,
-                    persist_func_kwargs = None, protocol = None):
+def _persist_pickle(func, enabled = True, target = None, out_transform = None,
+                    out_transform_kwargs = None, protocol = None):
     """Decorator to persist function output to disk using :func:`pickle.dump`.
     
     Don't call directly. Call through :func:`persist_pickle`.
@@ -26,20 +26,20 @@ def _persist_pickle(func, enabled = True, target = None, persist_func = None,
         # note that inspect.getfile fails on C/builtin functions!
         target = os.path.dirname(inspect.getfile(func)) + "/" + fname
     # if no persistence function, just use identity
-    if persist_func is None:
-        persist_func = lambda x: x
-    # empty args if None for persist_func_kwargs
-    if persist_func_kwargs is None:
-        persist_func_kwargs = {}
+    if out_transform is None:
+        out_transform = lambda x: x
+    # empty args if None for out_transform_kwargs
+    if out_transform_kwargs is None:
+        out_transform_kwargs = {}
     # define decorator for persisting object returned by func
     @wraps(func)
     def _persist_dec(*args, **kwargs):
         # evaluate function and get result to pickle
         res = func(*args, **kwargs)
-        # if enabled, persist to disk using persist_func and target
+        # if enabled, persist to disk using out_transform and target
         if enabled:
             with open(target, "wb") as wf:
-                pickle.dump(persist_func(res, **persist_func_kwargs),
+                pickle.dump(out_transform(res, **out_transform_kwargs),
                             wf, protocol = protocol)
         return res
     
@@ -47,8 +47,8 @@ def _persist_pickle(func, enabled = True, target = None, persist_func = None,
 
 
 def persist_pickle(func = None, enabled = True, target = None,
-                   persist_func = None, 
-                   persist_func_kwargs = None, protocol = None):
+                   out_transform = None, 
+                   out_transform_kwargs = None, protocol = None):
     """Decorator to persist function output to disk using :func:`pickle.dump`.
     
     .. warning:: Before you pickle something, please read the
@@ -67,14 +67,14 @@ def persist_pickle(func = None, enabled = True, target = None,
         output of :func:`time.asctime` where whitespace is replaced with ``_``
         and ``:`` is replaced with ``.`` with the extension ``.pickle``.
     :type target: str, optional
-    :param persist_func: A function that takes in the result returned by
+    :param out_transform: A function that takes in the result returned by
         ``func`` and outputs the Python object to be pickled. For example, if
         ``func`` outputs a tuple and you only want to persist its first element,
-        simply set ``persist_func`` to ``lambda x: x[0]``. Must only have one
+        simply set ``out_transform`` to ``lambda x: x[0]``. Must only have one
         positional argument for output of ``func`` and can have keyword args.
-    :type persist_func: function
-    :oaram persist_func_kwargs: Keyword arguments to pass to ``persist_func``.
-    :type persist_func_kwargs: dict, optional
+    :type out_transform: function
+    :oaram out_transform_kwargs: Keyword arguments to pass to ``out_transform``.
+    :type out_transform_kwargs: dict, optional
     :param protocol: An integer representing the pickle protocol to use.
         Defaults to :attr:`pickle.DEFAULT_PROTOCOL`.
     :type protocol: int, optional
@@ -83,8 +83,8 @@ def persist_pickle(func = None, enabled = True, target = None,
     # define new decorator that calls _persist_pickle
     def _wrap_dec(f):
         return _persist_pickle(f, enabled = enabled, target = target,
-                               persist_func = persist_func,
-                               persist_func_kwargs = persist_func_kwargs,
+                               out_transform = out_transform,
+                               out_transform_kwargs = out_transform_kwargs,
                                protocol = protocol)
     # if func is None, return _wrap_dec
     if func is None:
@@ -93,8 +93,8 @@ def persist_pickle(func = None, enabled = True, target = None,
     return _wrap_dec(func)
 
 
-def _persist_json(func, enabled = True, target = None, persist_func = None,
-                  persist_func_kwargs = None, indent = 4, **dump_kwargs):
+def _persist_json(func, enabled = True, target = None, out_transform = None,
+                  out_transform_kwargs = None, indent = 4, **dump_kwargs):
     """Decorator to persist function output to disk using :func:`json.dump`.
     
     Don't call directly. Call through :func:`persist_json`.
@@ -111,20 +111,20 @@ def _persist_json(func, enabled = True, target = None, persist_func = None,
         # note that inspect.getfile fails on C/builtin functions!
         target = os.path.dirname(inspect.getfile(func)) + "/" + fname
     # if no persistence function, just use identity
-    if persist_func is None:
-        persist_func = lambda x: x
-    # empty args if None for persist_func_kwargs
-    if persist_func_kwargs is None:
-        persist_func_kwargs = {}
+    if out_transform is None:
+        out_transform = lambda x: x
+    # empty args if None for out_transform_kwargs
+    if out_transform_kwargs is None:
+        out_transform_kwargs = {}
     # define decorator for persisting object returned by func
     @wraps(func)
     def _persist_dec(*args, **kwargs):
         # evaluate function and get result to pickle
         res = func(*args, **kwargs)
-        # if enabled, persist to disk using persist_func and target
+        # if enabled, persist to disk using out_transform and target
         if enabled:
             with open(target, "w") as wf:
-                json.dump(persist_func(res, **persist_func_kwargs),
+                json.dump(out_transform(res, **out_transform_kwargs),
                           wf, indent = indent, **dump_kwargs)
         return res
     
@@ -132,7 +132,7 @@ def _persist_json(func, enabled = True, target = None, persist_func = None,
 
 
 def persist_json(func = None, enabled = True, target = None,
-                 persist_func = None, persist_func_kwargs = None,
+                 out_transform = None, out_transform_kwargs = None,
                  indent = 4, **dump_kwargs):
     """Decorator to persist function output to disk using :func:`json.dump`.
     
@@ -144,8 +144,8 @@ def persist_json(func = None, enabled = True, target = None,
     # define new decorator that calls _persist_json
     def _wrap_dec(f):
         return _persist_json(f, enabled = enabled, target = target,
-                             persist_func = persist_func,
-                             persist_func_kwargs = persist_func_kwargs,
+                             out_transform = out_transform,
+                             out_transform_kwargs = out_transform_kwargs,
                              indent = indent, **dump_kwargs)
     # if func is None, return _wrap_dec
     if func is None:

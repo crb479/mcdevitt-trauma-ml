@@ -28,8 +28,8 @@ def test_persist_pickle():
         lrc.fit(X_train, y_train)
         return lrc, lrc.score(X_test, y_test)
     
-    # persistence function: we just want the model, not the accuracy
-    def persist_func(res):
+    # output transformation function: we just want the model, not the accuracy
+    def out_transform(res):
         return res[0]
     
     # get iris data
@@ -46,7 +46,7 @@ def test_persist_pickle():
     abspath = os.path.dirname(os.path.abspath(__file__))
     # call with persist function and specific target
     tlr_persist = persist_pickle(
-        persist_func = persist_func, target = abspath + "/.lrc.pickle"
+        out_transform = out_transform, target = abspath + "/.lrc.pickle"
     )(train_lr)
     res = tlr_persist(X_train, X_test, y_train, y_test)
     # load model and check that accuracy is the same
@@ -70,8 +70,8 @@ def test_persist_json():
         dtc.fit(X_train, y_train)
         return dtc, dtc.score(X_test, y_test)
     
-    # persistence function: just want model hyperparameters
-    def persist_func(res):
+    # output transformation function: just want model hyperparameters
+    def out_transform(res):
         return res[0].get_params()
     
     # get iris data
@@ -88,7 +88,7 @@ def test_persist_json():
     abspath = os.path.dirname(os.path.abspath(__file__))
     # call with persist function and specific target
     tdtc_persist = persist_json(
-        persist_func = persist_func, target = abspath + "/.dtc_params.json"
+        out_transform = out_transform, target = abspath + "/.dtc_params.json"
     )(train_dtc)
     res = tdtc_persist(X_train, X_test, y_train, y_test, random_state = 7)
     # save accuracy
