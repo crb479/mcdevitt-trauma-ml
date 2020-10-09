@@ -1,7 +1,7 @@
 numpy>=1.15
 pandas>=1.0
+pytest>=6.0.1
 scipy>=1.5
 # important if you are going to pickle models. ex. 0.22 used float32 for trees,
 # those models cannot be unpickled for use with 0.23, which uses float64
 scikit-learn>=0.23
-pytest>=6.0.1
