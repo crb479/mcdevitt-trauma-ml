@@ -24,13 +24,17 @@ def na_count_by_col(df, percentage = False, sort_cols = "keep"):
     """
     if df is None:
         raise ValueError("df is None")
-    # if percentage, use df.shape[0] as deflator, else set to 1 for counts
+    # if percentage, use df.shape[0] as deflator, else set to 1 for counts. also
+    # adjust the name of the final returned Series as well.
     if percentage:
         deflator = df.shape[0]
+        col_name = "percent"
     else:
         deflator = 1
-    # get whether each element is NA or not, sum over rows
+        col_name = "count"
+    # get whether each element is NA or not, sum over rows + set name
     na_series = pd.isna(df).sum(axis = 0) / deflator
+    na_series.name = col_name
     # sort by index, depending on sort_cols, and then return
     if sort_cols == "keep":
         pass
