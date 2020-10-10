@@ -1,0 +1,1 @@
+__doc__ = "``mtml.toy`` unit tests of ``add_user_tag`` decorators."
