@@ -1,3 +1,7 @@
 **/__pycache__
 **/*.pickle
 mtml/tests/*.json
+mtml/tests/*.csv
+**/*.xls
+**/*.xlsx
+/na_pct_by_col.csv

@@ -28,10 +28,9 @@ our_path = os.path.dirname(os.path.abspath(__file__))
 @persist_pickle(target = our_path + "/vitals_models.pickle",
                 enabled = True,
                 out_transform = lambda x: x[0])
-def fit_classifiers_dropna(use_memory = False, random_state = None,
-                           scaler = "standard", dropna = False, imputer = None,
-                           imputer_kwargs = None, cv = 3, n_jobs = -1, 
-                           persist = True, verbose = False, report = False):
+def fit_classifiers_dropna(scaler = "standard", dropna = False, cv = 3, 
+                           n_jobs = -1, verbose = False, persist_report = True, 
+                           report = False, random_state = None):
     """Makes a few linear classification models, dropping missing data.
     
     Pass ``None`` to ``random_state`` for stochastic behavior. Models used are
@@ -40,10 +39,7 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
     starting hyperparameter sets. Estimators are refit using best
     hyperparameters on training data, accuracy, precision, recall evaluated on
     test data.
-    
-    :param use_memory: Use :class:`joblib.Memory` to cache to disk. Default
-        ``False`` not to do this (use with big datasets).
-    :type use_memory: bool, optional
+
     :param random_state: :class:`numpy.random.RandomState` instance. If not
         provided, this function's fitting behavior may be stochastic.
     :type random_state: :class:`numpy.random.RandomState`, optional
@@ -88,7 +84,6 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
     else:
         raise ValueError("scaler must be \"standard\" or \"minmax\"")
     # create memory using current dir as cache is use_memory is True
-    memory = None
     if use_memory:
         memory = Memory(os.path.dirname(os.path.abspath(__file__)))
     # if random_state is None, create a new one
@@ -192,8 +187,8 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
         # print metrics for this problem
         if report:
             print(scores_dict[cp])
-    # if persist is True, persist results to disk
-    if persist:
+    # if persist is True, persist report results to disk
+    if persist_report:
         # get file's absolute path
         our_path = os.path.dirname(os.path.abspath(__file__))
         # save score report as CSV
