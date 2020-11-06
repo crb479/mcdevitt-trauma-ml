@@ -22,15 +22,34 @@ from ..utils.persist import persist_csv, persist_json, persist_pickle
 OUR_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # input columns to use (note we drop BMI, which has 6000+ missing values, and
-# patient_identifier, which is useless to us)
+# patient_identifier, which is useless to us). also drop pt_result which is the
+# prothrombin column since it relatively correlated with ptt_result. we drop
+# tot_cholesterol_result and hdl_result, replace with column of their ratios.
+# this is done with _replace_hdl_tot_chol_with_ratio
 VTE_INPUT_COLS = [
-    "inr_result", "ldl_result", "ptt_result", "tot_cholesterol_result",
-    "d_dimer_result", "glucose_result", "crp_result", "pt_result", "fib_result",
-    "trig_result", "thrombin_result", "plt_result", "hdl_result",
-    "gender_male0_female1", "age", "anticoagulant_use_yes1_no0"
+    "inr_result", "ldl_result", "ptt_result", "d_dimer_result",
+    "glucose_result", "crp_result", "fib_result", "trig_result",
+    "thrombin_result", "plt_result", "gender_male0_female1", "age",
+    "anticoagulant_use_yes1_no0"
 ]
 # output column
 VTE_OUTPUT_COLS = ["thrombosis_present_yes1_no0"]
+
+
+def _replace_hdl_tot_chol_with_ratio(df):
+    """Replace ``tot_cholesterol_result`` and ``hdl_result`` with their ratio.
+
+    :param df: :class:`pandas.DataFrame` containing the VTE data.
+    :type df: :class:`pandas.DataFrame`
+    :rtype: :class:`pandas.DataFrame`
+    """
+    # get ratio of total cholesterol and HDL
+    ratio = df["tot_cholesterol_result"].values / df["hdl_result"].values
+    # drop both original columns and add new column as tot_chol_over_hdl
+    df.drop(columns = ["tot_cholesterol_result", "hdl_result"], inplace = True)
+    df = df.assign(tot_chol_over_hdl = ratio)
+    # done, so return
+    return df
 
 
 @persist_csv(target = OUR_PATH + "/vte_models_scores.csv",
@@ -73,6 +92,7 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
     """
     # get data set from vte_slp_factory
     X_train, X_test, y_train, y_test = vte_slp_factory(
+        data_transform = _replace_hdl_tot_chol_with_ratio,
         inputs = VTE_INPUT_COLS, targets = VTE_OUTPUT_COLS, dropna = True,
         random_state = random_seed
     )

@@ -27,6 +27,8 @@ def make_slp_from_data(data_path, inputs = None, targets = None,
     :type targets: iterable, optional
     :param data_transform: Function to transform a :class:`pandas.DataFrame`
         containing the ``inputs`` columns joined with the ``targets`` columns.
+        Takes a single :class:~pandas.DataFrame` as a positional argument and
+        keyword arguments. Returns the modified :class:`~pandas.DataFrame`.
     :type data_transform: function, optional
     :param data_transform_kwargs: Keyword arguments to pass to the function
         passed to ``data_transform_args``.
@@ -66,14 +68,22 @@ def make_slp_from_data(data_path, inputs = None, targets = None,
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    # if no transform is provided, set as function that returns the underlying
-    # numpy array backing the DataFrame/Series
+    # if no data transform, make it identity function
+    if data_transform is None:
+        data_transform = lambda x: x
+    # if no data transform kwargs, make it empty dict
+    if data_transform_kwargs is None:
+        data_transform_kwargs = {}
+    # if no target transform is provided, set as function that returns the
+    # underlying numpy array backing the DataFrame/Series
     if target_transform is None:
         target_transform = lambda x: x.values
     if target_transform_kwargs is None:
         target_transform_kwargs = {}
-    # load data/prep/sf_trauma_data_num.csv
+    # load data from file
     df = pd.read_csv(data_path)
+    # transform data with data_transform
+    df = data_transform(df, **data_transform_kwargs)
     # if inputs is None, use all columns except for last as input columns
     if inputs is None:
         inputs  = df.columns[:-1]
