@@ -23,16 +23,14 @@ the headers in ``SF Hospital trauma data-v2.xlsx``
 """
 
 import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
 
 # pylint: disable=relative-beyond-top-level
 from .. import SF_NUM_DATA_PREP_PATH, SF_VITALS_COLS
 from .factory import make_slp_from_data
 
 
-def slp_factory(**kwargs):
-    """Generates supervised problems from SF trauma data set.
+def sf_slp_factory(**kwargs):
+    """Generates supervised learning problems from SF trauma data set.
 
     A wrapper for :func:`~mtml.data.factory.make_slp_from_data` where the
     ``data_path`` argument is the path to the preprocessed numerical SF trauma
@@ -99,7 +97,7 @@ def cls_vitals_trauma(test_size = 0.25, shuffle = True, dropna = False,
     :rtype: tuple
     """
     # use factory method
-    return slp_factory(
+    return sf_slp_factory(
         inputs = SF_VITALS_COLS, targets = ["iss"], 
         target_transform = make_trauma_feature, dropna = dropna,
         na_axis = na_axis, na_how = na_how, na_thresh = na_thresh,
@@ -142,7 +140,7 @@ def cls_vitals_mort(test_size = 0.25, shuffle = True, dropna = False,
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    return slp_factory(
+    return sf_slp_factory(
         inputs = SF_VITALS_COLS, targets = ["mortality at disch"], dropna = dropna,
         na_axis = na_axis, na_how = na_how, na_thresh = na_thresh, 
         na_subset = na_subset, test_size = test_size, shuffle = shuffle, 
@@ -184,7 +182,7 @@ def cls_vitals_mof(test_size = 0.25, shuffle = True, dropna = False,
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    return slp_factory(
+    return sf_slp_factory(
         inputs = SF_VITALS_COLS, targets = ["mof"], dropna = dropna, 
         na_axis = na_axis, na_how = na_how, na_thresh = na_thresh,
         na_subset = na_subset, test_size = test_size, shuffle = shuffle, 
