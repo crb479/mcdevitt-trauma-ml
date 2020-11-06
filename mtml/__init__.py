@@ -9,26 +9,26 @@ TOP_LEVEL_PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 "Absolute path to the top-level directory of the package."
 
 # useful global constants
-trauma_score_cols = (
+DF_TRAUMA_SCORE_COLS = (
     "ais head1", "ais face2", "ais chest3", "ais abdomen4", "ais extremity5",
     "ais skin6", "iss", "APACHE-2", "GCS (ED arrival)"
 )
 "Labels for trauma score columns to drop from SF trauma data set."
 
-disease_comorb_cols = (
+SF_DISEASE_COMORB_COLS = (
     "hiv", "aids", "hepatic failure", "immuno-suppression", "asthma", "copd",
     "ild", "other chronic lung disease", "cad", "chf", "esrd dialysis",
     "cirrhosis", "diabetes", "malignancy"
 )
 "Pre-existing disease and comorbidity column labels in SF trauma data set."
 
-vitals_cols = (
+SF_VITALS_COLS = (
     "hr0_temperature", "hr0_heart rate", "hr0_respiratory rate", "hr0_SBP",
     "hr0_pH", "hr0_paCO2", "hr0_paO2", "hr0_HCO3", "hr0_serum CO2"
 )
 "Vitals column labels in SF trauma data set."
 
-lab_panel_cols = (
+SF_LAB_PANEL_COLS = (
     "hr0_lactate", "albumin", "day1_bilirubin", "day1_urine output total (ml)",
     "hr0_BUN", "hr0_creatinine", "hr0_wbc", "hr0_hgb", "hr0_hct", "hr0_plts",
     "hr0_pt", "hr0_pt_rlab", "hr0_ptt", "hr0_ptt_rlab", "hr0_inr",
