@@ -14,7 +14,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-from ..data.sf_trauma import cls_vitals_mof, cls_vitals_mort, cls_vitals_trauma
+# pylint: disable=relative-beyond-top-level
+from ..data.sf import cls_vitals_mof, cls_vitals_mort, cls_vitals_trauma
 from ..utils.persist import persist_json, persist_pickle
 
 # get file's absolute path
@@ -28,8 +29,9 @@ our_path = os.path.dirname(os.path.abspath(__file__))
                 enabled = True,
                 out_transform = lambda x: x[0])
 def fit_classifiers_dropna(use_memory = False, random_state = None,
-                           scaler = "standard", cv = 3, n_jobs = -1, 
-                           persist = False, verbose = False, report = False):
+                           scaler = "standard", dropna = False, imputer = None,
+                           imputer_kwargs = None, cv = 3, n_jobs = -1, 
+                           persist = True, verbose = False, report = False):
     """Makes a few linear classification models, dropping missing data.
     
     Pass ``None`` to ``random_state`` for stochastic behavior. Models used are
@@ -48,6 +50,8 @@ def fit_classifiers_dropna(use_memory = False, random_state = None,
     :param scaler: What kind of input scaling to use. Default is ``"standard"``
         to center + make data unit variance, ``"minmax"`` uses min-max scaling.
     :type scaler: str, optional
+    :param dropna: ``True`` to drop missing values from data sets.
+    :type dropna: bool, optional
     :param cv: Number of CV splits to make when doing grid search.
     :type cv: int, optional
     :param n_jobs: Number of jobs to run in parallel when grid searching.
