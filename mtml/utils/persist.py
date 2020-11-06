@@ -1,8 +1,12 @@
-__doc__ = "Function decorators for persisting Python objects to disk."
+__doc__ = """Function decorators for persisting Python objects to disk.
+
+These should not be used with lambda functions unless ``target`` is specified.
+"""
 
 from functools import wraps
 import inspect
 import json
+import pandas as pd
 import os.path
 import pickle
 import time
@@ -82,10 +86,11 @@ def persist_pickle(func = None, enabled = True, target = None,
     """
     # define new decorator that calls _persist_pickle
     def _wrap_dec(f):
-        return _persist_pickle(f, enabled = enabled, target = target,
-                               out_transform = out_transform,
-                               out_transform_kwargs = out_transform_kwargs,
-                               protocol = protocol)
+        return _persist_pickle(
+            f, enabled = enabled, target = target,
+            out_transform = out_transform, 
+            out_transform_kwargs = out_transform_kwargs, protocol = protocol
+        )
     # if func is None, return _wrap_dec
     if func is None:
         return _wrap_dec
@@ -102,7 +107,7 @@ def _persist_json(func, enabled = True, target = None, out_transform = None,
     if func is None:
         raise ValueError("func is None")
     # if no specified target, use current directory the function is located in
-    # and use the function's name together with __pickle__ and current time,
+    # and use the function's name together with __json__ and current time,
     # joined with underscores (we don't like spaces). replace ":" in time with
     # "." since ":" is a reserved character in filesystems.
     if target is None:
@@ -139,14 +144,120 @@ def persist_json(func = None, enabled = True, target = None,
     .. note:: Only a few Python objects can be persisted to disk in JSON format.
        Some compatible objects include dicts, lists, tuples, strings, ints,
        floats, ``True``, ``False``, ``None``, ``np.nan`` or other NaN
-       representations. Arbitrary Python objects can be represented as JSON.
+       representations. Arbitrary Python objects cannot be represented as JSON.
+
+    Refer to :func:`persist_pickle` for parameter details omitted here.
+
+    :param indent: How many spaces to indent JSON output, which is pretty-
+        printed by default. Defaults to ``4``. If ``0``, then no pretty-printing
+        is performed by :func:`json.dump`.
+    :type indent: int, optional
+    :param dump_kwargs: Additional keyword args to pass to :func:`json.dump`.
+    :rtype: function
     """
     # define new decorator that calls _persist_json
     def _wrap_dec(f):
-        return _persist_json(f, enabled = enabled, target = target,
-                             out_transform = out_transform,
-                             out_transform_kwargs = out_transform_kwargs,
-                             indent = indent, **dump_kwargs)
+        return _persist_json(
+            f, enabled = enabled, target = target,
+            out_transform = out_transform,
+            out_transform_kwargs = out_transform_kwargs, 
+            indent = indent, **dump_kwargs
+        )
+    # if func is None, return _wrap_dec
+    if func is None:
+        return _wrap_dec
+    # else return result
+    return _wrap_dec(func)
+
+
+def _df_to_csv_wrapper(df, csv_path, **kwargs):
+    """Subroutine wrapper around :func:`pandas.DataFrame.to_csv`.
+
+    :param df: :class:`pandas.DataFrame` to write to disk as CSV file.
+    :type df: :class:`pandas.DataFrame`
+    :param csv_path: Path to write the CSV file to.
+    :type csv_path: str
+    :param kwargs: Keyword arguments to pass to :func:`pandas.DataFrame.to_csv`.
+    """
+    df.to_csv(csv_path, **kwargs)
+    
+
+def _persist_csv(func = None, enabled = True, target = None, converter = None,
+                converter_kwargs = None, out_transform = None,
+                out_transform_kwargs = None):
+    """Decorator to persist function output to disk as CSV file.
+    
+    Don't call directly. Call through :func:`persist_csv`.
+    """
+    if func is None:
+        raise ValueError("func is None")
+    # if no specified target, use current directory the function is located in
+    # and use the function's name together with __csv__ and current time,
+    # joined with underscores (we don't like spaces). replace ":" in time with
+    # "." since ":" is a reserved character in filesystems.
+    if target is None:
+        fname = (func.__name__ + "__csv__" + 
+                 "_".join(time.asctime().split()).replace(":", ".") + ".csv")
+        # note that inspect.getfile fails on C/builtin functions!
+        target = os.path.dirname(inspect.getfile(func)) + "/" + fname
+    # if no converter function, use _df_to_csv_wrapper
+    if converter is None:
+        converter = _df_to_csv_wrapper
+    # empty args if None for converter_kwargs
+    if converter_kwargs is None:
+        converter_kwargs = {}
+    # if no persistence function, just use identity
+    if out_transform is None:
+        out_transform = lambda x: x
+    # empty args if None for out_transform_kwargs
+    if out_transform_kwargs is None:
+        out_transform_kwargs = {}
+    # define decorator for persisting object returned by func
+    @wraps(func)
+    def _persist_dec(*args, **kwargs):
+        # evaluate function and get result to pickle
+        res = func(*args, **kwargs)
+        # if enabled, persist to disk with converter, out_transform, and target
+        if enabled:
+            converter(out_transform(res, **out_transform_kwargs),
+                      target, **converter_kwargs)
+        return res
+    
+    return _persist_dec
+
+
+def persist_csv(func = None, enabled = True, target = None, converter = None,
+                converter_kwargs = None, out_transform = None,
+                out_transform_kwargs = None):
+    """Decorator to persist function output to disk as CSV file.
+
+    By default, the persisted object is assumed to be a
+    :class:`pandas.DataFrame` and ``converter`` will automatically be bound to
+    a wrapper around :meth:`pandas.DataFrame.to_csv`. For other objects, a
+    custom conversion function is required.
+
+    Refer to :func:`persist_pickle` for parameter details omitted here.
+
+    :param converter: Conversion function to use that will write selected
+        function output to disk as a CSV file. The function's signature must
+        contain only two positional arguments, which are the object to save as
+        CSV and the path to write the CSV file to; all other arguments must be
+        keyword arguments. Its return value is ignored. If not provided, then
+        the selected output to persist is assumed to be a
+        :class:`pandas.DataFrame` and :func:`_df_to_csv_wrapper` is used.
+    :type converter: function, optional
+    :param converter_kwargs: Dict of keyword arguments to pass to ``converter``.
+    :type converter_kwargs: dict, optional
+    :rtype: function
+    """
+    # define new decorator that calls _persist_csv
+    def _wrap_dec(f):
+        return _persist_csv(
+            f, enabled = enabled, target = target,
+            out_transform = out_transform, converter = converter,
+            converter_kwargs = converter_kwargs,
+            out_transform_kwargs = out_transform_kwargs
+        )
     # if func is None, return _wrap_dec
     if func is None:
         return _wrap_dec
