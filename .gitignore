@@ -1,7 +1,9 @@
 **/__pycache__
 **/*.pickle
+# ignore garbage in tests
 mtml/tests/*.json
 mtml/tests/*.csv
+# no excel files! or binary files in general
 **/*.xls
 **/*.xlsx
 /na_pct_by_col.csv
