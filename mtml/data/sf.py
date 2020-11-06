@@ -26,11 +26,12 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+# pylint: disable=relative-beyond-top-level
 from .. import sf_num_data_prep_path, vitals_cols
 
 
 def spl_factory(inputs, targets, data_transform = None,
-                data_transform_kwargs = None,target_transform = None,
+                data_transform_kwargs = None, target_transform = None,
                 target_transform_kwargs = None, dropna = False, na_axis = 0,
                 na_how = "any", na_thresh = None, na_subset = None,
                 test_size = 0.25, shuffle = True, random_state = None):
@@ -122,7 +123,6 @@ def spl_factory(inputs, targets, data_transform = None,
     return tuple(out)
 
 
-# function for creating 0/1 trauma feature from pandas Series
 def make_trauma_feature(ser):
     """Creates 0/1 trauma feature from :class:`pandas.Series` of ISS scores.
     
@@ -222,8 +222,8 @@ def cls_vitals_mort(test_size = 0.25, shuffle = True, dropna = False,
 
 
 def cls_vitals_mof(test_size = 0.25, shuffle = True, dropna = False,
-                      na_axis = 0, na_how = "any", na_thresh = None,
-                      na_subset = None, random_state = None):
+                   na_axis = 0, na_how = "any", na_thresh = None,
+                   na_subset = None, random_state = None):
     """Return vitals data from ``sf_num_data_prep_path`` to classify MOF.
     
     MOF = multiple organ failure.
