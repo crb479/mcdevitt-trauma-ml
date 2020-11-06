@@ -1,6 +1,6 @@
-__doc__ = """Make supervised learning problems from ``sf_num_data_prep_path``.
+__doc__ = """Make supervised learning problems from ``SF_NUM_DATA_PREP_PATH``.
 
-``sf_num_data_prep_path`` corresponds to the
+``SF_NUM_DATA_PREP_PATH`` corresponds to the
 ``data/prep/sf_trauma_data_num.csv`` data file, which is a miminally
 preprocessed version of the raw data located in
 ``data/raw/sf_trauma_data_num_raw.csv``.
@@ -27,7 +27,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 # pylint: disable=relative-beyond-top-level
-from .. import sf_num_data_prep_path, vitals_cols
+from .. import SF_NUM_DATA_PREP_PATH, vitals_cols
 
 
 def spl_factory(inputs, targets, data_transform = None,
@@ -96,7 +96,7 @@ def spl_factory(inputs, targets, data_transform = None,
     if target_transform_kwargs is None:
         target_transform_kwargs = {}
     # load data/prep/sf_trauma_data_num.csv
-    df = pd.read_csv(sf_num_data_prep_path)
+    df = pd.read_csv(SF_NUM_DATA_PREP_PATH)
     # extract input and target columns
     data = df.loc[:, inputs].join(df.loc[:, targets])
     # drop NA values according to NA dropping strategy
@@ -140,7 +140,7 @@ def make_trauma_feature(ser):
 def cls_vitals_trauma(test_size = 0.25, shuffle = True, dropna = False,
                       na_axis = 0, na_how = "any", na_thresh = None,
                       na_subset = None, random_state = None):
-    """Return vitals data from ``sf_num_data_prep_path`` to classify trauma.
+    """Return vitals data from ``SF_NUM_DATA_PREP_PATH`` to classify trauma.
     
     Trauma is indicated when ISS score is greater than 15.
 
@@ -183,7 +183,7 @@ def cls_vitals_trauma(test_size = 0.25, shuffle = True, dropna = False,
 def cls_vitals_mort(test_size = 0.25, shuffle = True, dropna = False,
                       na_axis = 0, na_how = "any", na_thresh = None,
                       na_subset = None, random_state = None):
-    """Return vitals data from ``sf_num_data_prep_path`` to classify mortality.
+    """Return vitals data from ``SF_NUM_DATA_PREP_PATH`` to classify mortality.
     
     Mortality corresponds to mortality at discharge.
 
@@ -224,7 +224,7 @@ def cls_vitals_mort(test_size = 0.25, shuffle = True, dropna = False,
 def cls_vitals_mof(test_size = 0.25, shuffle = True, dropna = False,
                    na_axis = 0, na_how = "any", na_thresh = None,
                    na_subset = None, random_state = None):
-    """Return vitals data from ``sf_num_data_prep_path`` to classify MOF.
+    """Return vitals data from ``SF_NUM_DATA_PREP_PATH`` to classify MOF.
     
     MOF = multiple organ failure.
 
