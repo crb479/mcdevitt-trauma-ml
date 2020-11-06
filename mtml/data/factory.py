@@ -66,8 +66,6 @@ def make_slp_from_data(data_path, inputs = None, targets = None,
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    if targets is None:
-        raise ValueError("targets is None")
     # if no transform is provided, set as function that returns the underlying
     # numpy array backing the DataFrame/Series
     if target_transform is None:

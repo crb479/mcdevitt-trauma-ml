@@ -28,4 +28,4 @@ def vte_slp_factory(**kwargs):
         :class:`numpy.ndarray` objects
     :rtype: tuple
     """
-    return make_slp_from_data(VTE_DATA_PREP_PATH)
+    return make_slp_from_data(VTE_DATA_PREP_PATH, **kwargs)
