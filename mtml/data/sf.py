@@ -221,9 +221,6 @@ def sf_domain_impute(target = None):
             "mortality at disch", "hr0_Protein C", "hr0_D-Dimer"
         ], inplace = True
     )
-    # drop rows if missing the 3 outcomes we care about: iss (trauma score),
-    # mof (multiple organ failure), mortality at discharge
-    df.dropna(subset = ["iss", "mof", "mortality at disch"], inplace = True)
     # drop columns: all comobidities, APACHE-2, lactate, albumin, bilirubin, 
     # urine output, fibrinogen
     df.drop(

@@ -79,6 +79,18 @@ mort_AUC_withoutNA.csv
 
 sf_trauma_data_num.csv
    Shape ``(1494, 76)``. The numerical SF hospital patient trauma data in
-   ``data/sf_trauma_data_num_raw.csv`` with the last 14 duplicate columns
-   and trauma scorer columns (``iss``, ``APACHE-2``, etc.) removed, ``"Yes"``
-   and ``"No"`` changed to ``1`` and ``0`` respectively.
+   ``prep/sf_trauma_data_num_raw.csv`` with the last 14 duplicate columns
+   removed + ``"Yes"`` and ``"No"`` changed to ``1`` and ``0`` respectively.
+   Contains missing values.
+
+sf_trauma_data_num_domimp.csv
+   Shape ``(865, 56)``. The SF hospital patient data in
+   ``prep/sf_trauma_data_num.csv`` preprocessed using our domain knowledge.
+   Rows where any values in columns ``smoking status``, ``race``, ``latino``,
+   ``iss``, ``mof``, ``mortality at disch``, ``hr0_Protein C``, ``hr0_D-Dimer``
+   are missing are dropped. All comorbidity (ex. ``aids``, ``asthma``, etc.)
+   columns and the ``APACHE-2``, ``hr0_lactate``, ``albumin``,
+   ``day1_bilirubin``, ``day1_urine output total (ml)``, ``hr0_fibrinogen``
+   columns were completely dropped. Any row where two of the three columns
+   ``weight kg``, ``height cm``, ``bmi`` had values were imputed by using the
+   two non-missing values to fill in the missing value. Contains missing values.
