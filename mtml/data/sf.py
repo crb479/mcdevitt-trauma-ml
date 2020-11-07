@@ -21,11 +21,13 @@ the headers in ``SF Hospital trauma data-v2.xlsx``
 .. __: https://drive.google.com/drive/folders/1VyFHmTdDq-yMMvj_CPfEcV60Jvb70-RL
    ?usp=sharing
 """
-
+import _io
+import math
 import numpy as np
+import pandas as pd
 
 # pylint: disable=relative-beyond-top-level
-from .. import SF_NUM_DATA_PREP_PATH, SF_VITALS_COLS
+from .. import SF_NUM_DATA_PREP_PATH, SF_DISEASE_COMORB_COLS, SF_VITALS_COLS
 from .factory import make_slp_from_data
 
 
@@ -141,10 +143,10 @@ def cls_vitals_mort(test_size = 0.25, shuffle = True, dropna = False,
     :rtype: tuple
     """
     return sf_slp_factory(
-        inputs = SF_VITALS_COLS, targets = ["mortality at disch"], dropna = dropna,
-        na_axis = na_axis, na_how = na_how, na_thresh = na_thresh, 
-        na_subset = na_subset, test_size = test_size, shuffle = shuffle, 
-        random_state = random_state
+        inputs = SF_VITALS_COLS, targets = ["mortality at disch"],
+        dropna = dropna, na_axis = na_axis, na_how = na_how,
+        na_thresh = na_thresh, na_subset = na_subset, test_size = test_size,
+        shuffle = shuffle, random_state = random_state
     )
 
 
@@ -188,3 +190,73 @@ def cls_vitals_mof(test_size = 0.25, shuffle = True, dropna = False,
         na_subset = na_subset, test_size = test_size, shuffle = shuffle, 
         random_state = random_state
     )
+
+
+def sf_domain_impute(target = None):
+    """Using our domain-specific knowledge, impute the raw SF trauma data set.
+
+    Imputes the data in ``data/files/prep/sf_trauma_data_num.csv`` using our
+    domain-specific knowledge. Drops columns APACHE-2, hr0_lctate, albumin,
+    day1_bilirubin, day1_urine output total, hr0_fibrinogen, all comorbidities
+    (ex. aids, hiv, asthma, etc.). Drops rows where smoking status, race, or
+    latino features are missing and any rows where iss, mof, or mortality at
+    disch (the target columns) are missing. Imputes bmi, weight kg, and height
+    cm if two out of those three values are present in a row, else skip.
+
+    :param target: Optional file name or file object to save the imputed data
+        set to. If ``None``, then no writing to disk is performed.
+    :type target: str or , optional
+    :returns: The data set preprocessed using our domain-specific knowledge.
+    :rtype: :class:`pandas.DataFrame`
+    """
+    # read the SF trauma data
+    df = pd.read_csv(SF_NUM_DATA_PREP_PATH)
+    # drop rows if smoking, blood type, race, latino missing or if we are
+    # missing any of the 3 outcomes we care about: iss (trauma score), mof
+    # (multiple organ failure), mortality at discharge, or if any rows don't
+    # contain protein C or D-dimer observations
+    df.dropna(
+        subset = [
+            "smoking status", "race", "latino", "iss", "mof",
+            "mortality at disch", "hr0_Protein C", "hr0_D-Dimer"
+        ], inplace = True
+    )
+    # drop rows if missing the 3 outcomes we care about: iss (trauma score),
+    # mof (multiple organ failure), mortality at discharge
+    df.dropna(subset = ["iss", "mof", "mortality at disch"], inplace = True)
+    # drop columns: all comobidities, APACHE-2, lactate, albumin, bilirubin, 
+    # urine output, fibrinogen
+    df.drop(
+        columns = list(SF_DISEASE_COMORB_COLS) + [
+            "APACHE-2", "hr0_lactate", "albumin", "day1_bilirubin",
+            "day1_urine output total (ml)", "hr0_fibrinogen"
+        ], inplace = True
+    )
+    # what to do with ABG? hr0_pH, hr0_paCO2, hr0_paO2, hr0_HCO3
+    # weight, height (cm), bmi imputation
+    whb = ["weight kg", "height cm", "bmi"]
+    # impute BMI rows (bmi = mass / height ** 2; height in METERS). note we use
+    # df.index.values since some of the rows were dropped.
+    for i in df.index.values:
+        # reference to the weight in kg, height in cm, bmi
+        whb_vals = df.loc[i, whb]
+        # if there is a single NA value, impute
+        if whb_vals.isna().sum() == 1:
+            # if weight is na, weight = bmi * (height / 100) ** 2
+            if np.isnan(whb_vals[0]):
+                df.loc[i, whb[0]] = whb_vals[2] * (whb_vals[1] ** 2) / 1e4
+            # else if height is na, height = sqrt(mass / bmi) * 100
+            elif np.isnan(whb_vals[1]):
+                df.loc[i, whb[1]] = math.sqrt(whb_vals[0] / whb_vals[2]) * 100
+            # else if bmi is na, bmi = mass / (height / 100) ** 2
+            elif np.isnan(whb_vals[2]):
+                df.loc[i, whb[2]] = whb_vals[0] / (whb_vals[1] ** 2) / 1e4
+        # else just ignore, can't impute if 2 of 3 are missing
+    # do nothing if target is None
+    if target is None:
+        pass
+    # else write to new file
+    else:
+        df.to_csv(target, index = False)
+    # return modified DataFrame
+    return df
