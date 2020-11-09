@@ -93,4 +93,16 @@ sf_trauma_data_num_domimp.csv
    ``day1_bilirubin``, ``day1_urine output total (ml)``, ``hr0_fibrinogen``
    columns were completely dropped. Any row where two of the three columns
    ``weight kg``, ``height cm``, ``bmi`` had values were imputed by using the
-   two non-missing values to fill in the missing value. Contains missing values.
+   two non-missing values to fill in the missing value. Also, if just the value
+   for ``weight kg`` is present and the value for ``male`` (sex) in the row is
+   present, then ``height cm`` is mean-imputed using average height in cm
+   conditional on sex and the ``bmi`` value is filled in using the BMI formula.
+   ``hr0_pH``, ``hr0_paCO2``, ``hr0_paO2``, and ``hr0_HCO3`` are mean-imputed
+   if all four values are missing in a row, else skips. ``hr0_wbc``,
+   ``hr0_hgb``, ``hr0_hct``, and ``hr0_plt`` are mean-imputed as follows: for
+   ``hr0_wbc``, if all four values are missing in a row, impute, else skip,
+   while for the other three values, impute if the value for ``male`` is present
+   *and* if all four values are missing. ``hr0_BUN`` and ``hr0_creatinine`` are
+   mean-imputed as follows: for ``hr0_BUN``, if both values are missing, impute,
+   while for ``hr0_creatininte``, impute only if the value for ``male`` is
+   present in the row. Contains missing values.

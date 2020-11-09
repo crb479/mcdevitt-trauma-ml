@@ -201,7 +201,15 @@ def sf_domain_impute(target = None):
     (ex. aids, hiv, asthma, etc.). Drops rows where smoking status, race, or
     latino features are missing and any rows where iss, mof, or mortality at
     disch (the target columns) are missing. Imputes bmi, weight kg, and height
-    cm if two out of those three values are present in a row, else skip.
+    cm if two out of those three values are present in a row or if weight and
+    sex are present, else skip. Mean-value imputes hr0_pH, hr0_paCO2, hr0_paO2,
+    and hr0_HCO3 if all four values are missing in a row, else skips. Mean-value
+    imputes hr0_wbc, hr0_hgb, hr0_hct, and hr0_plt as follows: for hr0_wbc, if
+    all four values are missing in a row, impute, else skip, while for the other
+    three values, impute if sex is present and if all four values are missing.
+    In both cases, skipping is done otherwise. Mean-value imputes hr0_BUN and
+    hr0_creatinine as follows: for hr0_BUN, if both values are missing, impute,
+    while for hr0_creatininte, impute only if sex is present. Skip otherwise.
 
     :param target: Optional file name or file object to save the imputed data
         set to. If ``None``, then no writing to disk is performed.
@@ -213,7 +221,7 @@ def sf_domain_impute(target = None):
     df = pd.read_csv(SF_NUM_DATA_PREP_PATH)
     # drop rows if smoking, blood type, race, latino missing or if we are
     # missing any of the 3 outcomes we care about: iss (trauma score), mof
-    # (multiple organ failure), mortality at discharge, or if any rows don't
+    # (multiple organ failure), mortality at discharge, or if any rows don"t
     # contain protein C or D-dimer observations
     df.dropna(
         subset = [
@@ -237,8 +245,12 @@ def sf_domain_impute(target = None):
     for i in df.index.values:
         # reference to the weight in kg, height in cm, bmi
         whb_vals = df.loc[i, whb]
-        # if there is a single NA value, impute
-        if whb_vals.isna().sum() == 1:
+        # count number of NA values (0 to 3)
+        whb_num_na = whb_vals.isna().sum()
+        # value of the sex column in this row
+        i_male = df.loc[i, "male"]
+        # if there is a single NA value, impute using BMI formula
+        if whb_num_na == 1:
             # if weight is na, weight = bmi * (height / 100) ** 2
             if np.isnan(whb_vals[0]):
                 df.loc[i, whb[0]] = whb_vals[2] * (whb_vals[1] ** 2) / 1e4
@@ -247,8 +259,52 @@ def sf_domain_impute(target = None):
                 df.loc[i, whb[1]] = math.sqrt(whb_vals[0] / whb_vals[2]) * 100
             # else if bmi is na, bmi = mass / (height / 100) ** 2
             elif np.isnan(whb_vals[2]):
-                df.loc[i, whb[2]] = whb_vals[0] / (whb_vals[1] ** 2) / 1e4
-        # else just ignore, can't impute if 2 of 3 are missing
+                df.loc[i, whb[2]] = whb_vals[0] / (whb_vals[1] ** 2) * 1e4
+        # else if there are two NA values, but weight and sex not NA (sex is
+        # coded correctly as 0 or 1), we can impute the average height and then
+        # compute bmi using the formula.
+        elif (whb_num_na == 2) and (not np.isnan(whb_vals[0])) and \
+            ((i_male == 0) or (i_male == 1)):
+            # impute height based on sex; 1 if male, 0 if female.
+            df.loc[i, whb[1]] = 175 if i_male == 1 else 161
+            # impute bmi using the mass / (height / 100) ** 2
+            df.loc[i, whb[2]] = whb_vals[0] / (df.loc[i, whb[1]] ** 2) * 1e4
+        # else just ignore, can't impute otherwise
+    # four ABG column names
+    abg_cols = ["hr0_pH", "hr0_paCO2", "hr0_paO2", "hr0_HCO3"]
+    # mean impute ABG rows for ABG values hr0_pH, hr0_paCO2, hr0_paO2, hr0_HCO3
+    for i in df.index.values:
+        # if all of 4 ABG values are NA, then just mean impute the values
+        if df.loc[i, abg_cols].isna().sum() == 4:
+            df.loc[i, abg_cols] = (7.4, 40, 87.5, 24) # average values
+    # four CBC column names
+    cbc_cols = ["hr0_wbc", "hr0_hgb", "hr0_hct", "hr0_plts"]
+    # mean impute CBC measurements hr0_wbc, hr0_hgb, hr0_hct, hr0_plt
+    for i in df.index.values:
+        # value of the sex column in this row
+        i_male = df.loc[i, "male"]
+        # if all of the 4 CBC values are NA
+        if df.loc[i, cbc_cols].isna().sum() == 4:
+            # mean impute WBC count
+            df.loc[i, cbc_cols[0]] = 6.5 # sex-independent average value
+            # if sex is present (correctly coded), impute the rest
+            if (i_male == 0) or (i_male == 1):
+                df.loc[i, cbc_cols[1]] = 14.9 if i_male == 1 else 13.3
+                df.loc[i, cbc_cols[2]] = 43.45 if i_male == 1 else 40.2
+                df.loc[i, cbc_cols[3]] = 226 if i_male == 1 else 264
+    # the column names for the BUN and creatinine columns
+    bcr_cols = ["hr0_BUN", "hr0_creatinine"]
+    # mean impute hr0_BUN and hr0_creatinine
+    for i in df.index.values:
+        # value of the sex column in this row
+        i_male = df.loc[i, "male"]
+        # if both BUN and creatinine are missing
+        if df.loc[i, bcr_cols].isna().sum() == 2:
+            # mean impute BUN
+            df.loc[i, bcr_cols[0]] = 12.5 # sex-independent average value
+            # if sex is present (correctly coded), impute creatinine
+            if (i_male == 0) or (i_male == 1):
+                df.loc[i, bcr_cols[1]] = 0.9 if i_male == 1 else 0.8
     # do nothing if target is None
     if target is None:
         pass
