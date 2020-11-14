@@ -110,7 +110,8 @@ def make_slp_from_data(data_path, inputs = None, targets = None,
     else:
         raise ValueError("output shape must be either (n_rows,) or (n_rows, "
                          "n_outputs); other shapes not supported")
-    # use train_test_split and return
-    out = train_test_split(X, y, test_size = test_size, shuffle = shuffle,
-                           random_state = random_state)
+    # use train_test_split and return on only the values of the X DataFrame.
+    # note that y is already of type ndarray
+    out = train_test_split(X.values, y, test_size = test_size,
+                           shuffle = shuffle, random_state = random_state)
     return tuple(out)

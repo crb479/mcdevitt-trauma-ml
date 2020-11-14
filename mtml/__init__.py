@@ -49,6 +49,37 @@ SF_NUM_DATA_PREP_PATH = (
 See the ``README.rst`` in ``mtml/data/files`` for more details.
 """
 
+VTE_INPUT_COLS = (
+    "inr_result", "ldl_result", "ptt_result", "d_dimer_result",
+    "glucose_result", "crp_result", "fib_result", "trig_result",
+    "thrombin_result", "plt_result", "gender_male0_female1", "age",
+    "anticoagulant_use_yes1_no0"
+)
+"""All input columns used for classification on the VTE data set.
+
+Note that we do not include the bmi column, which has 6000+ missing values, and
+patient_identifier, which is useless to us. We also drop ``pt_result`` which is
+the prothrombin column since it relatively correlated with ``ptt_result``. We
+drop ``tot_cholesterol_result`` and ``hdl_result``, which are typically replaced
+with their ratio. See
+:func:`mtml.demos.vte_models._replace_hdl_tot_chol_with_ratio` for details.
+"""
+
+VTE_CONT_INPUT_COLS = (
+    "inr_result", "ldl_result", "ptt_result", "d_dimer_result",
+    "glucose_result", "crp_result", "fib_result", "trig_result",
+    "thrombin_result", "plt_result", "age"
+)
+"""Continuous input columns used for classification on the VTE data set.
+
+A subset of the columns in :attr:`VTE_INPUT_COLS` where we also drop the binary
+columns ``gender_male0_female1`` and ``anticoagulant_use_yes1_no0``. See
+:attr:`VTE_INPUT_COLS` docstring for more details.
+"""
+
+VTE_OUTPUT_COLS = ["thrombosis_present_yes1_no0"]
+"Target column for VTE data. 1 if venous thromboembolism is present, 0 if not."
+
 VTE_DATA_PREP_PATH = (
     "/".join(
         [TOP_LEVEL_PACKAGE_PATH, "data", "files", "prep",
