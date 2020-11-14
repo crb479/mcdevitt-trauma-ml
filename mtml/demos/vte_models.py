@@ -45,16 +45,16 @@ def _replace_hdl_tot_chol_with_ratio(df):
     return df
 
 
-@persist_csv(target = OUR_PATH + "/vte_selected_cols.csv",
+@persist_csv(target = OUR_PATH + "/results/vte_selected_cols.csv",
              enabled = True,
              out_transform = lambda x: x[3])
-@persist_csv(target = OUR_PATH + "/vte_linear_scores.csv",
+@persist_csv(target = OUR_PATH + "/results/vte_linear_scores.csv",
              enabled = True,
              out_transform = lambda x: x[2])
-@persist_json(target = OUR_PATH + "/vte_linear_params.json",
+@persist_json(target = OUR_PATH + "/results/vte_linear_params.json",
              enabled = True,
              out_transform = lambda x: x[1])
-@persist_pickle(target = OUR_PATH + "/vte_linear.pickle",
+@persist_pickle(target = OUR_PATH + "/results/vte_linear.pickle",
                 enabled = True,
                 out_transform = lambda x: x[0])
 def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
@@ -238,13 +238,13 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
     return mdata, mparams, mscores, kbest_aucs
 
 
-@persist_csv(target = OUR_PATH + "/vte_boosting_scores.csv",
+@persist_csv(target = OUR_PATH + "/results/vte_boosting_scores.csv",
              enabled = True,
              out_transform = lambda x: x[2])
-@persist_json(target = OUR_PATH + "/vte_boosting_params.json",
+@persist_json(target = OUR_PATH + "/results/vte_boosting_params.json",
               enabled = True,
               out_transform = lambda x: x[1])
-@persist_pickle(target = OUR_PATH + "/vte_boosting.pickle",
+@persist_pickle(target = OUR_PATH + "/results/vte_boosting.pickle",
                 enabled = True,
                 out_transform = lambda x: x[0])
 def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False, 

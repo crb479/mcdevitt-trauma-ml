@@ -22,10 +22,10 @@ from ..utils.persist import persist_json, persist_pickle
 our_path = os.path.dirname(os.path.abspath(__file__))
 
 
-@persist_json(target = our_path + "/vitals_models_params.json",
+@persist_json(target = our_path + "/results/vitals_models_params.json",
               enabled = True,
               out_transform = lambda x: x[1])
-@persist_pickle(target = our_path + "/vitals_models.pickle",
+@persist_pickle(target = our_path + "/results/vitals_models.pickle",
                 enabled = True,
                 out_transform = lambda x: x[0])
 def fit_classifiers_dropna(scaler = "standard", dropna = False, cv = 3, 
@@ -170,10 +170,10 @@ def fit_classifiers_dropna(scaler = "standard", dropna = False, cv = 3,
         if report:
             print(f"{cp} task results:")
         # make DataFrame of the scoring results
-        scores_dict[cp] = pd.DataFrame(index = ["lrc", "svc", "dtc"],
-                                        columns = ["accuracy",
-                                                    "precision",
-                                                    "recall"])
+        scores_dict[cp] = pd.DataFrame(
+            index = ["lrc", "svc", "dtc"],
+            columns = ["accuracy", "precision", "recall"]
+        )
         # for all model names
         for mn in ("lrc", "svc", "dtc"):
             # compute test predictions
@@ -194,7 +194,7 @@ def fit_classifiers_dropna(scaler = "standard", dropna = False, cv = 3,
         # save score report as CSV
         for cp, cscores in scores_dict.items():
             # need to print index to identify model
-            cscores.to_csv(our_path + "/vitals_" + cp + ".csv")
+            cscores.to_csv(our_path + "/results/vitals_" + cp + ".csv")
     # return mdata, mparams, and scores_dict to caller
     return mdata, mparams, scores_dict
 
