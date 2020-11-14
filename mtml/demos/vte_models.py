@@ -5,6 +5,7 @@ in the typical standardization step. For convenience, we omit the ``bmi`` column
 and drop the 15 missing values in the ``age`` column (no way to fill these in).
 """
 
+from functools import partial
 import numpy as np
 import pandas as pd
 import os.path
@@ -60,6 +61,8 @@ def _replace_hdl_tot_chol_with_ratio(df):
 def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
                            report = False, random_seed = None):
     """Fit a few linear classifiers on the data.
+    
+    .. note:: Spits a lot of ``liblinear`` convergence warnings.
 
     See module docstring for rationale behind dropping ``bmi`` column and our
     missing value removal policy. Positive class has a ~7.73% class frequency
@@ -96,7 +99,7 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
     # matrix. note that we have to wrap in lambda in order to pass seed.
     # note: might want to tune the classifier later/try linear SVM instead?
     skbest = SelectKBest(
-        lambda x, y: roc_auc_score_func(x, y, random_state = random_seed), k = 7
+        partial(roc_auc_score_func, random_state = random_seed), k = 7
     )
     # first fit so we can get feature mask using get_support
     skbest.fit(X_train, y_train)
@@ -383,4 +386,5 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
 
 if __name__ == "__main__":
     # _ = fit_boosting_classifiers(report = True, random_seed = 7)
+    # _ = mdv.fit_linear_classifiers(report = True, random_seed = 7)
     pass
