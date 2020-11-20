@@ -104,5 +104,5 @@ sf_trauma_data_num_domimp.csv
    while for the other three values, impute if the value for ``male`` is present
    *and* if all four values are missing. ``hr0_BUN`` and ``hr0_creatinine`` are
    mean-imputed as follows: for ``hr0_BUN``, if both values are missing, impute,
-   while for ``hr0_creatininte``, impute only if the value for ``male`` is
+   while for ``hr0_creatinine``, impute only if the value for ``male`` is
    present in the row. Contains missing values.
