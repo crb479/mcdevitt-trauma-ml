@@ -12,7 +12,9 @@ import os.path
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, roc_auc_score
+)
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -205,7 +207,8 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
     # DataFrame indexed by name of the model where columns are accuracy,
     # precision, and recall for each model
     mscores = pd.DataFrame(
-        index = base_names, columns = ["accuracy", "precision", "recall"]
+        index = base_names, 
+        columns = ["accuracy", "precision", "recall", "roc_auc"]
     )
     # for each model, train + record results into mdata, mparams, and mscores
     for base_name, base_model, param_grid, train_ref, val_ref in zip(
@@ -223,19 +226,20 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
         mparams[base_name] = params
         # compute test predictions using refit model on val_ref
         y_pred = model.predict(val_ref)
+        # get decision function values for computing ROC AUC
+        y_pred_scores = model.decision_function(val_ref)
         # save accuracy, precision, and recall to in mscores
         mscores.loc[base_name, :] = (
-            accuracy_score(y_test, y_pred),
-            precision_score(y_test, y_pred),
-            recall_score(y_test, y_pred)
+            accuracy_score(y_test, y_pred), precision_score(y_test, y_pred),
+            recall_score(y_test, y_pred), roc_auc_score(y_test, y_pred_scores)
         )
     # if report is True, print top selected features + mscores to stdout
     if report:
         print("---- top 7 features by univariate ROC AUC ", end = "")
         print("-" * 38)
         print(kbest_aucs)
-        print("---- linear classifier accuracy, precision, recall ", end = "")
-        print("-" * 29)
+        print("---- linear classifier quality metrics ", end = "")
+        print("-" * 41)
         print(mscores)
     # return results that can get picked up by decorators
     return mdata, mparams, mscores, kbest_aucs
@@ -386,5 +390,5 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
 
 if __name__ == "__main__":
     # _ = fit_boosting_classifiers(report = True, random_seed = 7)
-    # _ = mdv.fit_linear_classifiers(report = True, random_seed = 7)
+    # _ = fit_linear_classifiers(report = True, random_seed = 7)
     pass
