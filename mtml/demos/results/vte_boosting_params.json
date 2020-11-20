@@ -2,7 +2,7 @@
     "AdaBoostClassifier": {
         "algorithm": "SAMME.R",
         "base_estimator__ccp_alpha": 0.0,
-        "base_estimator__class_weight": null,
+        "base_estimator__class_weight": "balanced",
         "base_estimator__criterion": "entropy",
         "base_estimator__max_depth": 3,
         "base_estimator__max_features": null,
@@ -17,7 +17,7 @@
         "base_estimator__splitter": "best",
         "base_estimator": {
             "ccp_alpha": 0.0,
-            "class_weight": null,
+            "class_weight": "balanced",
             "criterion": "entropy",
             "max_depth": 3,
             "max_features": null,
@@ -32,7 +32,7 @@
             "splitter": "best"
         },
         "learning_rate": 1.0,
-        "n_estimators": 50,
+        "n_estimators": 400,
         "random_state": 7
     },
     "GradientBoostingClassifier": {
@@ -41,7 +41,7 @@
         "init": null,
         "learning_rate": 0.1,
         "loss": "deviance",
-        "max_depth": 3,
+        "max_depth": 1,
         "max_features": null,
         "max_leaf_nodes": null,
         "min_impurity_decrease": 0.0,
@@ -53,7 +53,7 @@
         "n_iter_no_change": null,
         "presort": "deprecated",
         "random_state": 7,
-        "subsample": 1,
+        "subsample": 0.5,
         "tol": 0.0001,
         "validation_fraction": 0.1,
         "verbose": 0,

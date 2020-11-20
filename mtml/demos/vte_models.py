@@ -214,7 +214,7 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
     for base_name, base_model, param_grid, train_ref, val_ref in zip(
         base_names, base_models, param_grids, train_refs, val_refs):
         # instantiate and fit the GridSearchCV object. may spit mad warnings.
-        model = GridSearchCV(base_model, param_grid,
+        model = GridSearchCV(base_model, param_grid, scoring = "precision",
                              cv = cv, n_jobs = n_jobs, verbose = int(verbose))
         # note that train_ref is either X_train or X_train_red
         model.fit(train_ref, y_train)
@@ -254,7 +254,7 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
 @persist_pickle(target = OUR_PATH + "/results/vte_boosting.pickle",
                 enabled = True,
                 out_transform = lambda x: x[0])
-def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False, 
+def fit_boosting_classifiers(*, cv = 5, n_jobs = -1, verbose = False,
                              report = False, random_seed = None):
     """Fit a few [tree] boosting classifiers on the data.
 
@@ -267,7 +267,9 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
     ``scale_pos_weight`` parameter.
 
     Use 5-fold (by default) cross-validation to choose the best parameters,
-    refit on best, evaluate accuracy, precision, and recall.
+    refit on best, evaluate accuracy, precision, and recall. We use the 7
+    features selected on the basis of greatest ROC AUC. Use depth-1 and depth-3
+    trees to give some bias/variance tradeoff.
 
     Note that tree models are scaling insensitive, so no scaler/pipeline needed.
 
@@ -276,6 +278,8 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
     :param n_jobs: Number of jobs to run in parallel when grid searching.
         Defaults to ``-1`` to distribute load to all threads.
     :type n_jobs: int, optional
+    :param bootstrap_minority: Generate bootstrap samples for the minority class
+    :type bootstrap_minority: bool, optional
     :param verbose: Verbosity of the
         :class:`~sklearn.model_selection.GridSearchCV` during searching/fitting.
     :type verbose: bool, optional
@@ -292,29 +296,41 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
         inputs = VTE_INPUT_COLS, targets = VTE_OUTPUT_COLS, dropna = True,
         random_state = random_seed
     )
-    # standard hyperparameters for a depth-3 decision tree using entropy metric.
-    dtc_params = {
+    # use univariate ROC AUC scores to select the top 7 and get a reduced
+    # matrix. note that we have to use partial in order to pass seed.
+    skbest = SelectKBest(
+        partial(roc_auc_score_func, random_state = random_seed), k = 7
+    )
+    # first fit so we can get feature mask using get_support
+    skbest.fit(X_train, y_train)
+    col_mask = skbest.get_support()
+    # get reduced X_train, X_test by selecting only the 7 selected columns
+    X_train = X_train[:, col_mask]
+    X_test = X_test[:, col_mask]
+    # hyperparameters for a depth-1 balanced decision tree using entropy metric.
+    dtc_params_1 = {
         "criterion": "entropy", 
-        "max_depth": 3, 
+        "max_depth": 1,
+        "class_weight": "balanced"
     }
-    # force the tree to weight class weights to compensate for imbalance.
-    dtc_w_params = {
+    # hyperparameters for a depth-3 balanced decision tree using entropy metric
+    dtc_params_3 = {
         "criterion": "entropy",
         "max_depth": 3,
         "class_weight": "balanced"
     }
     ## hyperparameter grids for each model ##
-    # adaboost with depth-3 trees (unbalanced + balancec)
+    # adaboost with depth-1 + 3 trees (both balanced)
     ada_grid = {
-        "base_estimator": [DecisionTreeClassifier(**dtc_params),
-                           DecisionTreeClassifier(**dtc_w_params)],
+        "base_estimator": [DecisionTreeClassifier(**dtc_params_1),
+                           DecisionTreeClassifier(**dtc_params_3)],
         "n_estimators": [50, 100, 200, 400],
         "random_state": [random_seed]
     }
-    # gbt model with depth-3 trees (unbalanced only, i hate this API). also
+    # gbt model with depth-1 + 3 trees (unbalanced only, i hate this API). also
     # does stochastic gradient boosting through subsampling.
     gbt_grid = {
-        "max_depth": [3],
+        "max_depth": [1, 3],
         "n_estimators": [50, 100, 200, 400],
         "subsample": [0.5, 1],
         "random_state": [random_seed]
@@ -322,11 +338,11 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
     # compute ratio of 0 instances to 1 instances to get XGBoost
     # scale_pos_weight parameter (use training data only! don't be biased)
     neg_pos_ratio = (y_train == 0).sum() / (y_train == 1).sum()
-    # XGBoost model with depth-3 trees (unbalanced + balanced). also does
-    # stochastic gradient boosting through subsampling. use single thread to
-    # preclude thread contention with GridSearchCV
+    # XGBoost model with depth-1 + 3 trees (balanced only). also does stochastic
+    # gradient boosting through subsampling. use single thread to preclude
+    # thread contention with GridSearchCV
     xgb_grid = {
-        "max_depth": [3],
+        "max_depth": [1, 3],
         "n_estimators": [50, 100, 200, 400],
         "learning_rate": [0.1],
         "booster": ["gbtree"],
@@ -349,7 +365,7 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
     # precision, and recall for each model
     mscores = pd.DataFrame(
         index = tuple(map(lambda x: x.__class__.__name__, base_models)),
-        columns = ["accuracy", "precision", "recall"]
+        columns = ["accuracy", "precision", "recall", "roc_auc"]
     )
     # fortunately, we don't need to use Pipeline (no scaling here). for each
     # model, just train and record the results into mdata, mparams, and mscores
@@ -357,7 +373,7 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
         # instantiate and fit the GridSearchCV object. use precision as score
         # since the data set is really unbalanced so accuracy will of course
         # be very high if we just predict the majority class (0)
-        model = GridSearchCV(base_model, param_grid,
+        model = GridSearchCV(base_model, param_grid, scoring = "precision",
                              cv = cv, n_jobs = n_jobs, verbose = int(verbose))
         # get name of the base model
         model_name = base_model.__class__.__name__
@@ -375,11 +391,14 @@ def fit_boosting_classifiers(cv = 5, n_jobs = -1, verbose = False,
         mparams[model_name] = params
         # compute test predictions using refit model
         y_pred = model.predict(X_test)
+        # get predicted positive class probabilities for computing ROC AUC
+        # since XGBClassifier doesn't have the decision_function method. use the
+        # probabilities for the greater class.
+        y_pred_prob = model.predict_proba(X_test)[:, 1]
         # save accuracy, precision, and recall to in mscores
         mscores.loc[model_name, :] = (
-            accuracy_score(y_test, y_pred),
-            precision_score(y_test, y_pred),
-            recall_score(y_test, y_pred)
+            accuracy_score(y_test, y_pred), precision_score(y_test, y_pred),
+            recall_score(y_test, y_pred), roc_auc_score(y_test, y_pred_prob)
         )
     # if report is True, print mscores to stdout
     if report:
