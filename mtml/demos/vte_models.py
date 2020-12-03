@@ -5,10 +5,13 @@ in the typical standardization step. For convenience, we omit the ``bmi`` column
 and drop the 15 missing values in the ``age`` column (no way to fill these in).
 """
 
+# pylint: disable=import-error
 from functools import partial
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import os.path
+from sklearn.decomposition import PCA
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
@@ -35,6 +38,8 @@ OUR_PATH = os.path.dirname(os.path.abspath(__file__))
 def _replace_hdl_tot_chol_with_ratio(df):
     """Replace ``tot_cholesterol_result`` and ``hdl_result`` with their ratio.
 
+    Recommended domain-specific feature engineering step.
+
     :param df: :class:`pandas.DataFrame` containing the VTE data.
     :type df: :class:`pandas.DataFrame`
     :rtype: :class:`pandas.DataFrame`
@@ -46,6 +51,135 @@ def _replace_hdl_tot_chol_with_ratio(df):
     df = df.assign(tot_chol_over_hdl = ratio)
     # done, so return
     return df
+
+
+@persist_json(target = OUR_PATH + "/results/vte_whitened_pca_params.json",
+              enabled = True,
+              out_transform = lambda x: (x[0].get_params(), x[1].get_params()))
+@persist_pickle(target = OUR_PATH + "/results/vte_whitened_pcas.pickle",
+                enabled = True)
+def whitened_pca(*, report = False, plotting_dir = OUR_PATH + "/results",
+                 random_seed = None, figsize = (12, 4), 
+                 fig_fname = "vte_whitened_pcas_pct_trace.png",
+                 dpi = 150, tight_layout = True, plot_kwargs = None):
+    """Analysis method that performs whitened PCA on the VTE data set.
+
+    PCA is performed twice, first on all the columns specified by
+    ``VTE_CONT_INPUT_COLS`` and then on the seven columns chosen by a
+    :class:`sklearn.feature_selection.SelectKBest` instance using our homegrown
+    :func:`mtml.feature_selection.univariate.roc_auc_score_func` score function.
+
+    A report may optionally be printed which shows the explained variance ratios
+    and if ``plotting_dir`` is not ``None``, then plots will be written to the
+    directory path provided to ``plotting_dir``.
+
+    Parameter descriptions in progress.
+    
+    :rtype: tuple
+    """
+    # if plot_kwargs are None, set to empty dict
+    if plot_kwargs is None:
+        plot_kwargs = {}
+    # get data set of continuous features from vte_slp_factory
+    X_train, _, y_train, _ = vte_slp_factory(
+        data_transform = _replace_hdl_tot_chol_with_ratio,
+        inputs = VTE_CONT_INPUT_COLS, targets = VTE_OUTPUT_COLS, dropna = True,
+        random_state = random_seed
+    )
+    # use univariate ROC AUC scores to select top 7 features and get a reduced
+    # matrix. note that we have to wrap in lambda in order to pass seed.
+    skbest = SelectKBest(
+        partial(roc_auc_score_func, random_state = random_seed), k = 7
+    )
+    # first fit so we can get feature mask using get_support
+    skbest.fit(X_train, y_train)
+    col_mask = skbest.get_support()
+    # get reduced X_train by selecting only the 7 selected columns
+    X_train_red = X_train[:, col_mask]
+    # names of the 7 selected columns; order by descending AUC score
+    kbest_cols = np.array(VTE_CONT_INPUT_COLS)[col_mask][
+        np.flip(np.argsort(skbest.scores_[col_mask]))
+    ]
+    # PCA for full continuous columns and PCA for 7 highest AUC columns. note
+    # that we apply whitening transform since we'll need that for the models
+    # that are scaling-sensitive (like regularized models)
+    pca_full = PCA(whiten = True, random_state = random_seed)
+    pca_red = PCA(whiten = True, random_state = random_seed)
+    # fit on the training data
+    pca_full.fit(X_train)
+    pca_red.fit(X_train_red)
+    # n_components needed to explain 95% variance for full and reduced data.
+    n_full_95 = n_red_95 = 0
+    # compute for each PCA how many components are needed to explain 95% var
+    for i in range(pca_full.n_components_):
+        full_var_pct = pca_full.explained_variance_ratio_[:(i + 1)].sum()
+        if full_var_pct >= 0.95:
+            n_full_95 = i + 1
+            break
+    for i in range(pca_red.n_components_):
+        red_var_pct = pca_red.explained_variance_ratio_[:(i + 1)].sum()
+        if red_var_pct >= 0.95:
+            n_red_95 = i + 1
+            break
+    # print explained variance ratios (eigenvalues standardized by trace) if
+    # the option to report is True
+    if report is True:
+        print(f"---- VTE PCA on VTE_CONT_INPUT_COLS ", end = "")
+        print("-" * 44, end = "\n\n")
+        print(
+            f"explained variance ratios:\n{pca_full.explained_variance_ratio_}"
+            f"\n\nn_components needed to explain 95% variance: {n_full_95}\n"
+        )
+        print(f"---- VTE PCA on top 7 columns ", end = "")
+        print("-" * 50, end = "\n\n")
+        print(
+            f"selected columns (by univariate AUC):\n{kbest_cols}\n\n"
+            f"explained variance ratios:\n{pca_red.explained_variance_ratio_}"
+            f"\n\nn_components needed to explain 95% variance: {n_red_95}"
+        )
+    # if plotting dir is None, don't plot
+    if plotting_dir is None:
+        pass
+    # else make plots for full and reduced PCA and write plots to plotting_dir
+    else:
+        fig, axs = plt.subplots(nrows = 1, ncols = 2, figsize = figsize)
+        # plot
+        for ax, pca, n_for_95, ax_title in zip(
+            axs, (pca_full, pca_red), (n_full_95, n_red_95),
+            ("VTE_CONT_INPUT_COLS", "top 7 columns by AUC")
+        ):
+            # plot the normalized eigenvalues; use square marker
+            ax.plot(
+                1 + np.arange(pca.n_components_), pca.explained_variance_ratio_,
+                marker = "s", **plot_kwargs
+            )
+            # show all the eigenvalues (there aren't many so this is fine)
+            ax.set_xticks(1 + np.arange(pca.n_components_))
+            # plot vertical line indicating last eigenvalue needed to explain
+            # 95% of variance (add 0.5 for aesthetic)
+            ax.axvline(
+                x = n_for_95, color = "red",
+                label = (r"$ k $ s.t. $ \frac{1}{\mathrm{tr}(\mathbf{C})}"
+                         r"\sum_{i = 1}^k\lambda_i \geq 0.95 $")
+            )
+            # show legend (vline label)
+            ax.legend()
+            # set axis labels and axis title
+            ax.set_xlabel("eigenvalue number")
+            ax.set_ylabel(r"percent of trace")
+            ax.set_title(ax_title)
+        # set overall title for the figure
+        fig.suptitle(
+            r"Percent trace of $ \mathbf{C} = \frac{1}{n}\mathbf{X}^\top"
+            r"\mathbf{X} $ per eigenvalue $ \lambda_i $", size = "x-large"
+        )
+        # if tight_layout, call tight_layout
+        if tight_layout is True:
+            fig.tight_layout()
+        # save figure at dpi at plotting_dir/fig_fname
+        fig.savefig(plotting_dir + "/" + fig_fname, dpi = dpi)
+    # return pca_full and pca_red so that they can be appropriately persisted
+    return pca_full, pca_red
 
 
 @persist_csv(target = OUR_PATH + "/results/vte_selected_cols.csv",
@@ -254,7 +388,8 @@ def fit_linear_classifiers(cv = 5, n_jobs = -1, verbose = False,
 @persist_pickle(target = OUR_PATH + "/results/vte_boosting.pickle",
                 enabled = True,
                 out_transform = lambda x: x[0])
-def fit_boosting_classifiers(*, cv = 5, n_jobs = -1, verbose = False,
+def fit_boosting_classifiers(*, cv = 5, n_jobs = -1,
+                             bootstrap_minority = False, verbose = False,
                              report = False, random_seed = None):
     """Fit a few [tree] boosting classifiers on the data.
 
@@ -278,7 +413,8 @@ def fit_boosting_classifiers(*, cv = 5, n_jobs = -1, verbose = False,
     :param n_jobs: Number of jobs to run in parallel when grid searching.
         Defaults to ``-1`` to distribute load to all threads.
     :type n_jobs: int, optional
-    :param bootstrap_minority: Generate bootstrap samples for the minority class
+    :param bootstrap_minority: Generate bootstrap samples for minority class.
+        Currently this parameter is unused.
     :type bootstrap_minority: bool, optional
     :param verbose: Verbosity of the
         :class:`~sklearn.model_selection.GridSearchCV` during searching/fitting.
@@ -410,4 +546,5 @@ def fit_boosting_classifiers(*, cv = 5, n_jobs = -1, verbose = False,
 if __name__ == "__main__":
     # _ = fit_boosting_classifiers(report = True, random_seed = 7)
     # _ = fit_linear_classifiers(report = True, random_seed = 7)
+    # _ = whitened_pca(report = True, random_seed = 7
     pass
