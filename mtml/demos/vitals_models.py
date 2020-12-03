@@ -1,6 +1,8 @@
-__doc__ = "Create classification models from SF vitals data."
+__doc__ = """Create classification models from SF vitals data.
 
-from joblib import Memory
+Intended for demonstration purposes only.
+"""
+
 import json
 import numpy as np
 import os.path
@@ -83,9 +85,6 @@ def fit_classifiers_dropna(scaler = "standard", dropna = False, cv = 3,
         scaler = MinMaxScaler
     else:
         raise ValueError("scaler must be \"standard\" or \"minmax\"")
-    # create memory using current dir as cache is use_memory is True
-    if use_memory:
-        memory = Memory(os.path.dirname(os.path.abspath(__file__)))
     # if random_state is None, create a new one
     if random_state is None:
         random_state = np.random.RandomState()
