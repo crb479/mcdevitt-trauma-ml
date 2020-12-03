@@ -108,7 +108,7 @@ sf_trauma_data_num_domimp.csv
    present in the row. Contains missing values.
 
 vte_onlydata_preprocessed.csv
-   Shape ``(10989, 19)``. Preprocssed venous thromboembolism data. See the
+   Shape ``(10989, 19)``. Preprocessed venous thromboembolism data. See the
    docstrings for ``VTE_INPUT_COLS`` and ``VTE_CONT_INPUT_COLS`` located in the
    top-level package ``__init__.py`` for details on the features that should be
    used for predicting the classification target provided by the
