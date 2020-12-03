@@ -106,3 +106,10 @@ sf_trauma_data_num_domimp.csv
    mean-imputed as follows: for ``hr0_BUN``, if both values are missing, impute,
    while for ``hr0_creatinine``, impute only if the value for ``male`` is
    present in the row. Contains missing values.
+
+vte_onlydata_preprocessed.csv
+   Shape ``(10989, 19)``. Preprocssed venous thromboembolism data. See the
+   docstrings for ``VTE_INPUT_COLS`` and ``VTE_CONT_INPUT_COLS`` located in the
+   top-level package ``__init__.py`` for details on the features that should be
+   used for predicting the classification target provided by the
+   ``thrombosis_present_yes1_no0`` column.
