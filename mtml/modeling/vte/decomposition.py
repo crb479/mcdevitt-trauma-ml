@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest
+from sklearn.preprocessing import StandardScaler
 
 # pylint: disable=relative-beyond-top-level
 from .. import BASE_RESULTS_DIR
@@ -68,18 +69,28 @@ def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR + "",
     # first fit so we can get feature mask using get_support
     skbest.fit(X_train, y_train)
     col_mask = skbest.get_support()
-    # get reduced X_train by selecting only the 7 selected columns
-    X_train_red = X_train[:, col_mask]
+    # get reduced X_train and X_test by selecting only the 7 selected columns
+    X_train_red, X_test_red = X_train[:, col_mask], X_test[:, col_mask]
     # names of the 7 selected columns; order by descending AUC score
     kbest_cols = np.array(VTE_CONT_INPUT_COLS)[col_mask][
         np.flip(np.argsort(skbest.scores_[col_mask]))
     ]
+    # fit StandardScalers to training data and use them to normalize the data
+    # before feeding training data to PCA
+    scaler_full, scaler_red = StandardScaler(), StandardScaler()
+    scaler_full.fit(X_train), scaler_red.fit(X_train_red)
+    X_train, X_test = (
+        scaler_full.transform(X_train), scaler_full.transform(X_test)
+    )
+    X_train_red, X_test_red = (
+        scaler_red.transform(X_train_red), scaler_red.transform(X_test_red)
+    )
     # PCA for full continuous columns and PCA for 7 highest AUC columns. note
     # that we apply whitening transform since we'll need that for the models
     # that are scaling-sensitive (like regularized models)
     pca_full = PCA(whiten = True, random_state = random_seed)
     pca_red = PCA(whiten = True, random_state = random_seed)
-    # fit on the training data
+    # fit on the (standardized) training data
     pca_full.fit(X_train)
     pca_red.fit(X_train_red)
     # n_components needed to explain 95% variance for full and reduced data.
@@ -152,12 +163,12 @@ def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR + "",
             fig.tight_layout()
         # save figure at dpi at plotting_dir/fig_fname
         fig.savefig(plotting_dir + "/" + fig_fname, dpi = dpi)
-    # return PCA objects and data so that they can be appropriately persisted/
-    # passed to another analysis/model fitting method
+    # return PCA objects and (standardized) data so that they can be
+    # appropriately persisted/passed to another analysis/model fitting method
     return {
         "pcas": (pca_full, pca_red), 
         "data_train": (X_train, X_train_red, y_train),
-        "data_test": (X_test, y_test)
+        "data_test": (X_test, X_test_red, y_test)
     }
 
 
@@ -168,8 +179,10 @@ def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR + "",
                            tight_layout = True, plot_kwargs = None):
     """Calls :func:`whitened_pca` and plots scatter using top 2 eignvectors.
 
-    Only uses the data from the full training data matrix (uses all the columns
-    from ``VTE_CONT_INPUT_COLS``) when retrieving eigenspace coordinates.
+    Only uses the data from the (standardized) full training data matrix (uses
+    all the columns from ``VTE_CONT_INPUT_COLS``) when retrieving eigenspace
+    coordinates. Note that the data has already been centered and scaled to unit
+    variance during the PCA fitting process.
 
     The ``random_seed`` parameter is also used by :func:`whitened_pca` but all
     the plotting parameters only apply to the plot drawn by this function.
@@ -188,7 +201,8 @@ def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR + "",
         plot_kwargs = {}
     # get results from whitened_pca (doesn't generate plots)
     pca_res = whitened_pca(random_seed = random_seed, plotting_dir = None)
-    # get full training data and PCA object fitted on them
+    # get full training data and PCA object fitted on them. note that this data
+    # has already been standardized using StandardScaler.
     X_train, _, y_train = pca_res["data_train"]
     pca = pca_res["pcas"][0]
     # transform X_train and retrieve eigenbasis data coordinates
@@ -210,7 +224,7 @@ def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR + "",
     ax.set_ylabel(r"$ z_2 $")
     ax.legend()
     fig.suptitle(
-        r"VTE train data in eigenbasis coordinates $ [ \ z_1 \ \ x_2 "
+        r"VTE train data in eigenbasis coordinates $ [ \ z_1 \ \ z_2 "
         r"\ \ \ldots \ ] $ ", size = "x-large"
     )
     # if tight_layout is True, call tight_layout
