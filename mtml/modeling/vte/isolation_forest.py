@@ -204,9 +204,8 @@ def fit_isolation_forest(*, cv = 5, n_jobs = -1, verbose = False,
         params = model.best_estimator_.get_params()
         # save hyperparameters to mparams
         mparams[base_name] = params
-        # compute test predictions using refit model on test_ref. note we have
-        # to wrap with isoforest_label_adjust to get the right labels
-        y_pred = isoforest_label_adjust(model.predict)(test_ref)
+        # compute test predictions using refit model on test_ref
+        y_pred = model.predict(test_ref)
         # get decision function values for computing ROC AUC. note that we have
         # to negate them since isolation forest treats negative decision
         # function values as being for the outliers
