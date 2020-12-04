@@ -33,15 +33,15 @@ from ...utils.persist import persist_csv, persist_json, persist_pickle
 
 
 @persist_csv(
-    target = BASE_RESULTS_DIR + "/vte_whitened_oversampled_scores.csv",
+    target = BASE_RESULTS_DIR + "/vte_whitened_scores.csv",
     enabled = True, out_transform = lambda x: x[2]
 )
 @persist_json(
-    target = BASE_RESULTS_DIR + "/vte_whitened_oversampled_params.json",
+    target = BASE_RESULTS_DIR + "/vte_whitened_params.json",
     enabled = True, out_transform = lambda x: x[1]
 )
 @persist_pickle(
-    target = BASE_RESULTS_DIR + "/vte_whitened_oversampled.pickle",
+    target = BASE_RESULTS_DIR + "/vte_whitened.pickle",
     enabled = True, out_transform = lambda x: x[0]
 )
 def fit_pca_whitened_classifiers(
