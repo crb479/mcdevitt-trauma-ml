@@ -3,7 +3,7 @@ __doc__ = "``__init__.py`` for ``mtml`` package."
 import os.path
 
 # define version dunder
-__version__ = "0.0.1dev0"
+__version__ = "0.0.1dev1"
 
 TOP_LEVEL_PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 "Absolute path to the top-level directory of the package."
