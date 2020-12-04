@@ -1,0 +1,24 @@
+{
+    "isoforest": {
+        "bootstrap": false,
+        "contamination": "auto",
+        "max_features": 1.0,
+        "max_samples": "auto",
+        "n_estimators": 50,
+        "n_jobs": null,
+        "random_state": 7,
+        "verbose": 0,
+        "warm_start": false
+    },
+    "isoforest_pca": {
+        "bootstrap": false,
+        "contamination": "auto",
+        "max_features": 1.0,
+        "max_samples": "auto",
+        "n_estimators": 50,
+        "n_jobs": null,
+        "random_state": 7,
+        "verbose": 0,
+        "warm_start": false
+    }
+}

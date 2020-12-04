@@ -32,7 +32,7 @@ from ...utils.persist import persist_csv, persist_json, persist_pickle
     target = BASE_RESULTS_DIR + "/vte_whitened_pcas.pickle", enabled = True,
     out_transform = lambda x: x["pcas"]
 )
-def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR + "",
+def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR,
                  random_seed = None, figsize = (12, 4), 
                  fig_fname = "vte_whitened_pcas_pct_trace.png",
                  dpi = 150, tight_layout = True, plot_kwargs = None):
@@ -172,7 +172,7 @@ def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR + "",
     }
 
 
-def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR + "",
+def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR,
                            random_seed = None, figsize = (8, 6), 
                            fig_fname = "vte_whitened_pca_2d_eig.png", 
                            dpi = 150, cmap = "viridis",
