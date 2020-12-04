@@ -89,8 +89,6 @@ def isoforest_label_adjust(pred_func):
     By default the scikit-learn isolation forest returns -1 for outliers and 1
     for inliers, so this method is used to wrap fit_predict or predict methods
     and return 0 for inliers, 1 for outliers.
-    
-    GridSearchCV optimizes by means of precision score due to imbalance.
 
     :param pred_func: Scikit-learn prediction function that returns a flat
         :class:`numpy.ndarray` of labels ``-1`` and ``1``.
