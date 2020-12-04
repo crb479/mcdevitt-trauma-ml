@@ -9,7 +9,7 @@ TOP_LEVEL_PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 "Absolute path to the top-level directory of the package."
 
 # useful global constants
-DF_TRAUMA_SCORE_COLS = (
+SF_TRAUMA_SCORE_COLS = (
     "ais head1", "ais face2", "ais chest3", "ais abdomen4", "ais extremity5",
     "ais skin6", "iss", "APACHE-2", "GCS (ED arrival)"
 )
