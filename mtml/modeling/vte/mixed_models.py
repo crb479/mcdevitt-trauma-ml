@@ -64,7 +64,7 @@ def fit_pca_whitened_classifiers(
     Use 5-fold (by default) cross-validation to choose the best parameters,
     refit on best, evaluate accuracy, precision, recall, ROC AUC.
 
-    Note that we need a scaler before doing PCA.
+    Note that we need a scaler before doing PCA. Use F1 score to pick model.
 
     :param cv: Number of CV splits to make when doing grid search.
     :type cv: int, optional
@@ -114,7 +114,7 @@ def fit_pca_whitened_classifiers(
     lrc_l2_grid = dict(
         penalty = ["l2"],
         C = [1],
-        fit_intercept = [False],
+        fit_intercept = [True],
         max_iter = [100],
         class_weight = ["balanced"]
     )
@@ -125,13 +125,13 @@ def fit_pca_whitened_classifiers(
         dual = [True],
         random_state = [random_seed],
         C = [1, 5, 10],
-        fit_intercept = [False],
+        fit_intercept = [True],
         class_weight = ["balanced"]
     )
     # bagged logistic regression model with l2 penalty
     bag_lrc_l2_grid = dict(
         base_estimator = [
-            LogisticRegression(fit_intercept = False, class_weight = "balanced")
+            LogisticRegression(fit_intercept = True, class_weight = "balanced")
         ],
         n_estimators = [100, 200, 400],
         random_state = [random_seed]
@@ -139,7 +139,7 @@ def fit_pca_whitened_classifiers(
     # bagged linear SVM with l2 penalty (use default parameters + hinge loss)
     bag_lsvc_l2_grid = dict(
         base_estimator = [
-            LinearSVC(loss = "hinge", fit_intercept = False,
+            LinearSVC(loss = "hinge", fit_intercept = True,
                       class_weight = "balanced", random_state = random_seed)
             ],
         n_estimators = [100, 200, 400],
@@ -167,8 +167,10 @@ def fit_pca_whitened_classifiers(
         scale_pos_weight = [neg_pos_ratio]
     )
     # random forest classifier. note that according to ESL II, full trees are
-    # fine to grow and allow you to have one less tuning parameter.
+    # fine to grow and allow you to have one less tuning parameter, but it's
+    # still better to limit the overall tree depth.
     rf_grid = dict(
+        max_depth = [6, 12, 24],
         n_estimators = [100, 200, 400],
         criterion = ["entropy"],
         random_state = [random_seed],
@@ -253,5 +255,5 @@ def fit_pca_whitened_classifiers(
 
 
 if __name__ == "__main__":
-    # fit_pca_whitened_oversampled_classifiers(report = True, random_seed = 7)
+    # fit_pca_whitened_classifiers(report = True, random_seed = 7)
     pass
