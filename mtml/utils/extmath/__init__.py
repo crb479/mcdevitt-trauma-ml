@@ -1,0 +1,1 @@
+__doc__ = "Subpackage for convenient mathematical functions."
