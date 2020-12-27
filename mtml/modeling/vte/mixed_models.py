@@ -9,7 +9,6 @@ Mixed classifier training.
 """
 
 # pylint: disable=import-error
-from imblearn.over_sampling import RandomOverSampler
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
@@ -47,7 +46,7 @@ from ...utils.persist import persist_csv, persist_json, persist_pickle
 def fit_pca_whitened_classifiers(
     cv = 5, n_jobs = -1, verbose = False, report = False, random_seed = None
 ):
-    """Fit classifiers to undersampled PCA-whitened input data.
+    """Fit classifiers to [non-]undersampled PCA-whitened input data.
     
     .. note:: Spits a lot of ``liblinear`` convergence warnings.
 
