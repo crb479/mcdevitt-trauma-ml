@@ -18,7 +18,7 @@ from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, roc_auc_score
 )
 from sklearn.svm import LinearSVC, SVC
-from sklearn.model_selection import GridSearchCV, PredefinedSplit
+from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 import sys
 from xgboost import XGBClassifier
