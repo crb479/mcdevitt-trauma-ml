@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import pandas as pd
+import pickle
 from sklearn.decomposition import KernelPCA, PCA
 from sklearn.feature_selection import SelectKBest
 from sklearn.linear_model import LogisticRegression
@@ -40,10 +41,7 @@ from ...utils.plotting import normalized_scree_plot
     target = BASE_RESULTS_DIR + "/vte_whitened_pcas.pickle", enabled = True,
     out_transform = lambda x: x["pcas"]
 )
-def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR,
-                 random_seed = None, figsize = (12, 4), 
-                 fig_fname = "vte_whitened_pcas_pct_trace.png",
-                 dpi = 150, tight_layout = True, plot_kwargs = None):
+def whitened_pca(*, report = False, random_seed = None):
     """Analysis method that performs whitened PCA on the VTE data set.
 
     PCA is performed twice, first on all the columns specified by
@@ -52,17 +50,14 @@ def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR,
     :func:`mtml.feature_selection.univariate.roc_auc_score_func` score function.
 
     A report may optionally be printed which shows the explained variance ratios
-    and if ``plotting_dir`` is not ``None``, then plots of the explained
-    variance ratios will be written to the directory path provided to
-    ``plotting_dir``.
+    (normalized eigenvalues). Plots of the explained variance ratios can be
+    plotted with :func:`whitened_pca_scree_from_pickle` if the PCA estimators
+    of this object have been appropriately pickled.
 
     Parameter descriptions in progress.
     
     :rtype: dict
     """
-    # if plot_kwargs are None, set to empty dict
-    if plot_kwargs is None:
-        plot_kwargs = {}
     # get data set of continuous features from vte_slp_factory
     X_train, X_test, y_train, y_test = vte_slp_factory(
         data_transform = replace_hdl_tot_chol_with_ratio,
@@ -124,35 +119,6 @@ def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR,
                 f"\n\nn_components needed to explain 95% variance: {n_comp_95}",
                 end = "\n\n"
             )
-    # if plotting dir is None, don't plot
-    if plotting_dir is None:
-        pass
-    # else make plots for full and reduced PCA and write plots to plotting_dir
-    else:
-        fig, axs = plt.subplots(nrows = 1, ncols = 2, figsize = figsize)
-        # plot
-        for ax, pca, ax_title in zip(
-            axs, (pca_full, pca_red),
-            ("VTE_CONT_INPUT_COLS", "top 7 columns by AUC")
-        ):
-            # make scree plot. don't need to presort eigenvalues (already in
-            # descending order), don't need to normalize (already normalized),
-            # add vertical line at 95% mark, add x ticks
-            normalized_scree_plot(
-                ax, pca.explained_variance_ratio_, normalize = False,
-                presort = False, pct_trace = 0.95, plot_title = ax_title,
-                plot_xticks = 1 + np.arange(pca.n_components_)
-            )
-        # set overall title for the figure
-        fig.suptitle(
-            r"Percent trace of $ \mathbf{C} \triangleq \frac{1}{n}\mathbf{X}^\top"
-            r"\mathbf{X} $ per eigenvalue $ \lambda_i $", size = "x-large"
-        )
-        # if tight_layout, call tight_layout
-        if tight_layout is True:
-            fig.tight_layout()
-        # save figure at dpi at plotting_dir/fig_fname
-        fig.savefig(plotting_dir + "/" + fig_fname, dpi = dpi)
     # return PCA objects and (standardized) data so that they can be
     # appropriately persisted/passed to another analysis/model fitting method
     return {
@@ -162,12 +128,14 @@ def whitened_pca(*, report = False, plotting_dir = BASE_RESULTS_DIR,
     }
 
 
-def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR,
-                           random_seed = None, figsize = (8, 6), 
-                           fig_fname = "vte_whitened_pca_2d_eig.png", 
-                           dpi = 150, cmap = "viridis",
-                           tight_layout = True, plot_kwargs = None):
+def plot_pca_components_2d(
+    *, plotting_dir = BASE_RESULTS_DIR, random_seed = None, figsize = (8, 6),
+    fig_fname = "vte_whitened_pca_2d_eig.png", dpi = 150, cmap = "viridis",
+    tight_layout = True, plot_kwargs = None
+):
     """Calls :func:`whitened_pca` and plots scatter using top 2 eigenvectors.
+
+    .. note:: Inefficient due to embedded calling of :func:`whitened_pca`.
 
     Only uses the data from the (standardized) full training data matrix (uses
     all the columns from ``VTE_CONT_INPUT_COLS``) when retrieving eigenspace
@@ -189,8 +157,8 @@ def plot_pca_components_2d(*, plotting_dir = BASE_RESULTS_DIR,
     # if None, set to empty dict
     if plot_kwargs is None:
         plot_kwargs = {}
-    # get results from whitened_pca (doesn't generate plots)
-    pca_res = whitened_pca(random_seed = random_seed, plotting_dir = None)
+    # get results from whitened_pca
+    pca_res = whitened_pca(random_seed = random_seed)
     # get full training data and PCA object fitted on them. note that this data
     # has already been standardized using StandardScaler.
     X_train, _, y_train = pca_res["data_train"]
@@ -368,10 +336,8 @@ class ScoringKernelPCA(KernelPCA):
     out_transform = lambda x: x["pcas"]
 )
 def whitened_kernel_pca(
-    *, report = False, plotting_dir = BASE_RESULTS_DIR, random_seed = None,
-    figsize = (12, 4), metric = "f1_score", cv = 3, n_jobs = -1,
-    fig_fname = "vte_whitened_kernel_pcas_pct_trace.png", dpi = 150,
-    tight_layout = True, plot_kwargs = None
+    *, report = False, random_seed = None, metric = "f1_score", cv = 3,
+    n_jobs = -1
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
 
@@ -397,9 +363,6 @@ def whitened_kernel_pca(
     
     :rtype: dict
     """
-    # if plot_kwargs are None, set to empty dict
-    if plot_kwargs is None:
-        plot_kwargs = {}
     # get data set of continuous features from vte_slp_factory
     X_train, X_test, y_train, y_test = vte_slp_factory(
         data_transform = replace_hdl_tot_chol_with_ratio,
@@ -499,38 +462,6 @@ def whitened_kernel_pca(
                 f"best explained variance ratios:\n{pca.lambdas_ / trace}\n\n"
                 f"n_components needed to explain 95% variance: {n_comp_95}\n"
             )
-    # if plotting dir is None, don't plot
-    if plotting_dir is None:
-        pass
-    # else make plots for full and reduced PCA and write plots to plotting_dir
-    else:
-        fig, axs = plt.subplots(nrows = 1, ncols = 2, figsize = figsize)
-        # plot
-        for ax, pca, ax_title in zip(
-            axs, (pca_full, pca_red),
-            ("VTE_CONT_INPUT_COLS", "top 7 columns by AUC")
-        ):
-            # make scree plot. don't need to presort eigenvalues (already in
-            # descending order), add vertical line at 95% mark. no manual
-            # x-ticks since there are thousands of eigenvalues. replace C with
-            # K since this is a kernel matrix.
-            normalized_scree_plot(
-                ax, pca.lambdas_, presort = False, pct_trace = 0.95,
-                matrix_letter = "K", plot_title = ax_title,
-            )
-        # set overall title for the figure
-        fig.suptitle(
-            r"Percent trace of $ \mathbf{K} \triangleq "
-            r"\phi\left(\mathbf{XX}^\top\right) $, "
-            r"$ \phi : \mathbb{R}^{n \times n} \rightarrow "
-            r"\mathbb{R}^{n \times n} \text{" + str(pca.kernel) + r"} $, "
-            r"per eigenvalue $ \lambda_i $", size = "x-large"
-        )
-        # if tight_layout, call tight_layout
-        if tight_layout is True:
-            fig.tight_layout()
-        # save figure at dpi at plotting_dir/fig_fname
-        fig.savefig(plotting_dir + "/" + fig_fname, dpi = dpi)
     # return PCA objects and (standardized) data so that they can be
     # appropriately persisted/passed to another analysis/model fitting method.
     # CV results are also included as an extra bonus.
@@ -540,6 +471,226 @@ def whitened_kernel_pca(
         "data_test": (X_test, X_test_red, y_test),
         "cv_results": (cv_results_full, cv_results_red)
     }
+
+
+# usually calling with default arguments is fine unless whitened_pca is pickling
+# pickling its ScoringKernelPCA objects somewhere else
+def whitened_pca_scree_from_pickle(
+    pickle_path = BASE_RESULTS_DIR + "/vte_whitened_pcas.pickle", *,
+    fig_path = BASE_RESULTS_DIR + "/vte_whitened_pcas_pct_trace.png",
+    orientation = "vertical", pct_trace = 0.95, figsize = (6, 8),
+    matrix_letter = "C", plot_marker = "s", dpi = 150, tight_layout = True,
+    # note plot_xticks are hard-coded, but i didn't have another option here
+    plot_xticks = (1 + np.arange(12), 1 + np.arange(7)), plot_kwargs = None
+):
+    """Using pickled PCA objects, create normalized scree plots.
+
+    Uses pickled PCAs from :func:`whitened_pca` stored in ``pickle_path`` and
+    then calls :func:`_pcas_scree_from_pickle` to create the figure with the two
+    relevant scree plots and with appropriate formatting.
+
+    :param pickle_path: Path to the pickle file holding the tuple of the two
+        scikit-learn PCA estimators.
+    :type pickle_path: str
+    :param fig_path: Path to write the resulting figure to
+    :type fig_path: str
+    :param orientation: Whether the two scree plots should be stacked or be put
+        side by side (``True`` to stack).
+    :type orientation: bool, optional
+    :param pct_trace: Percent of trace that controls where the vertical lines
+        are drawn in each scree plot. ``None`` for no vertical line.
+    :type pct_trace: float, optional
+    :param figsize: ``(width, height)`` of figure in inches.
+    :type figsize: tuple, optional
+    :param matrix_letter: Letter for the matrix printed in the scree plots.
+    :type matrix_letter: str, optional
+    :param plot_marker: Valid marker value for :func:`matplotlib.axes.Axes.plot`
+    :type plot_marker: str, optional
+    :param dpi: DPI of the saved figure
+    :type dpi: int, optional
+    :param tight_layout: ``True`` to call the figure's
+        :func:`matplotlib.figure.Figure.tight_layout` method.
+    :type tight_layout: bool, optional
+    :param plot_xticks:
+    :type plot_xticks: :class:`numpy.ndarray`, optional
+    :param plot_kwargs: Other keyword args for :func:`matplotlib.axes.Axes.plot`
+    :type plot_kwargs: dict, optional
+    """
+    if orientation not in ("vertical", "horizontal"):
+        raise ValueError("orientation must be \"vertical\" or \"horizontal\"")
+    # call _pcas_scree_from_pickle to compute normalized scree plots
+    fig, _ = _pcas_scree_from_pickle(
+        pickle_path, "explained_variance_ratio_",
+        ("VTE_CONT_INPUT_COLS", "top 7 columns by AUC"),
+        max_rows = 2 if "vertical" else 1, max_cols = 1 if "vertical" else 2,
+        figsize = figsize, fig_title = (
+            r"Percent trace of $ \mathbf{C} \triangleq \frac{1}{n}"
+            r"\mathbf{X}^\top\mathbf{X} $ per eigenvalue $ \lambda_i $"
+        ), normalize = False, presort = False, pct_trace = pct_trace,
+        matrix_letter = matrix_letter, plot_marker = plot_marker,
+        plot_xticks = plot_xticks, plot_kwargs = plot_kwargs,
+        tight_layout = tight_layout
+    )
+    # save figure at dpi at plotting_dir/fig_fname
+    fig.savefig(fig_path, dpi = dpi)
+    # close manually
+    matplotlib.pyplot.close(fig)
+
+
+# usually calling with default arguments is fine unless whitened_kernel_pca is
+# pickling its ScoringKernelPCA objects somewhere else
+def whitened_kernel_pca_scree_from_pickle(
+    pickle_path = BASE_RESULTS_DIR + "/vte_whitened_kernel_pcas.pickle", *,
+    fig_path = BASE_RESULTS_DIR + "/vte_whitened_kernel_pcas_pct_trace.png",
+    orientation = "vertical", kernel = "laplacian", pct_trace = 0.95,
+    figsize = (6, 8), matrix_letter = "K", plot_marker = "D", dpi = 150,
+    tight_layout = True, plot_xticks = None, plot_kwargs = dict(markersize = 3)
+):
+    """Using pickled ScoringKernelPCA objects, create normalized scree plots.
+
+    Uses pickled :class:`ScoringKernelPCA` objects from
+    :func:`whitened_kernel_pca` stored in ``pickle_path`` and then calls
+    :func:`_pcas_scree_from_pickle` to create the figure with the two relevant
+    scree plots and with appropriate formatting.
+
+    Omitted named parameters have the same function as they do in
+    :func:`whitened_pca_scree_from_pickle` defined above.
+
+    :param kernel: Name of the kernel used in the best ScoringKernelPCA objects
+        that are pickled to ``pickle_path``. This can be checked by unpickling
+        the tuple of ScoringKernelPCA objects and checking their ``kernel``
+        attribute or by seeing the report printed by
+        :func:`whitened_kernel_pca` after its execution.
+    :type kernel: str, optional
+    """
+    if orientation not in ("vertical", "horizontal"):
+        raise ValueError("orientation must be \"vertical\" or \"horizontal\"")
+    # call _pcas_scree_from_pickle to compute normalized scree plots
+    fig, _ = _pcas_scree_from_pickle(
+        pickle_path, "lambdas_",
+        ("VTE_CONT_INPUT_COLS", "top 7 columns by AUC"),
+        max_rows = 2 if "vertical" else 1, max_cols = 1 if "vertical" else 2,
+        figsize = figsize, fig_title = (
+            r"Percent trace of $ \mathbf{K} \triangleq "
+            r"\mathbf{X}_\phi\mathbf{X}_\phi^\top $, " + kernel + "\n"
+            r"$ \mathbf{K}_{ij} \triangleq \phi(\mathbf{x}_i)^\top"
+            r"\phi(\mathbf{x}_j) $, per eigenvalue $ \lambda_i $"
+        ), presort = False, pct_trace = pct_trace,
+        matrix_letter = matrix_letter, plot_marker = plot_marker,
+        plot_xticks = plot_xticks, plot_kwargs = plot_kwargs,
+        tight_layout = tight_layout
+    )
+    # save figure at dpi at plotting_dir/fig_fname
+    fig.savefig(fig_path, dpi = dpi)
+    # close manually
+    matplotlib.pyplot.close(fig)
+
+# horizontal figure size was (12, 4)
+def _pcas_scree_from_pickle(
+    pickle_path, eig_attr_name, ax_titles, *, max_rows = None, max_cols = 1,
+    figsize = (6, 8), fig_title = None, normalize = True, presort = True,
+    pct_trace = 0.95, vline_color = "red", vline_kwargs = None,
+    matrix_letter = "C", plot_marker = "s", show_legend = True,
+    plot_xticks = None, plot_kwargs = None, tight_layout = True
+):
+    """Generic method for creating normalized scree plots from sklearn PCA.
+
+    The PCA objects are read from a pickle file. Since scikit-learn PCA and
+    KernelPCA have different attribute names, ``eig_attr_name`` is required to
+    specify which attribute holds the [normalized] eigenvalues. Most parameters
+    are simply the default values that are passed through to the function
+    :func:`mtml.utils.plotting.normalized_scree_plot`.
+
+    If ``max_cols = None``, i.e. number of columns is chosen automatically, then
+    the resulting plot will only have two columns.
+
+    The parameters shown below are specific to this function. Any omitted
+    named parameters are described in the docstring for
+    :func:`mtml.utils.plotting.normalized_scree_plot`.
+
+    :param pickle_path: Path to pickle file containing a list of objects that
+        have an attribute containing relevant eigenvalues. These should all be
+        same class of objects with the same attribute holding the eigenvalues.
+    :type pickle_path: str
+    :param eig_attr_name: Name of the object attribute holding the eigenvalues.
+    :type eig_attr_name: str
+    :param ax_titles: List/array of strings giving titles for each of the scree
+        plots that will be made. Must equal the number of PCA-like objects that
+        will be read from the pickle file.
+    :type ax_titles: list
+    :param max_rows: Maximum number of rows the plot can have. If there are not
+        enough rows, then an error is raised. Leave as ``None`` for the function
+        to automatically determine how many rows the plot will have.
+    :type max_rows: int, optional
+    :param max_cols: Maximum number of columns the plot can have. If there are
+        not enough columns, then an error is raised. Lave as ``None`` for the
+        function to automatically set number of columns to 2.
+    :type max_cols: int, optional
+    :param figsize: Tuple of ``(width, height)`` in inches.
+    :type figsize: tuple, optional
+    :param fig_title: Title for the overall figure holding the scree plots. If
+        ``None``, then no title is created for the overall figure (suptitle).
+    :type fig_title: str, optional
+    :param plot_xticks: Array-like of x axis tick locations for each subplot. If
+        not ``None``, then must have length equal to number of plots.
+    :type plot_xticks: array-like, optional
+    :returns: Figure and Axes tuple
+    :rtype: tuple
+    """
+    # load PCA objects from disk (must be a list/tuple of them)
+    with open(pickle_path, "rb") as f:
+        pcas = pickle.load(f)
+    # ax_titles must have same length as pcas
+    if len(pcas) != len(ax_titles):
+        raise ValueError("must have same number of axis titles as PCA objects")
+    # number of scree plots that will have to be made
+    n_plots = len(pcas)
+    # if plot_xticks is None, set to list of None
+    if plot_xticks is None:
+        plot_xticks = [None] * n_plots
+    # plot_xticks must have same length as pcas
+    if n_plots != len(plot_xticks):
+        raise ValueError(
+            "number of x ticks specifications must equal number of PCA objects"
+        )
+    # figure out how many rows and columns. if max_cols is None, it is set to
+    # 2 automatically. then max_rows is adjusted as needed.
+    if max_cols is None:
+        max_cols = 2
+    if max_rows is None:
+        max_rows = n_plots // max_cols
+        # add one more row if not evenly divisible
+        if max_rows % max_cols > 0:
+            max_rows = max_rows + 1
+    # check that max_rows * max_cols >= n_plots. if not, error
+    if max_rows * max_cols < n_plots:
+        raise ValueError(
+            "max_rows and/or max_cols values are too small. pass None for "
+            "automatic determination of number of rows and/or columns or "
+            "increase the values of max_rows, max_cols"
+        )
+    # make plots for full and reduced PCA and write plots to plotting_dir
+    fig, axs = plt.subplots(nrows = max_rows, 
+                            ncols = max_cols, figsize = figsize)
+    # flatten the axes
+    axs = axs.ravel()
+    # plot
+    for ax, pca, ax_title, xticks in zip(axs, pcas, ax_titles, plot_xticks):
+        # make scree plot
+        normalized_scree_plot(
+            ax, getattr(pca, eig_attr_name), presort = presort,
+            pct_trace = pct_trace, vline_color = vline_color,
+            vline_kwargs = vline_kwargs, matrix_letter = matrix_letter,
+            plot_title = ax_title, plot_marker = plot_marker,
+            plot_xticks = xticks, plot_kwargs = plot_kwargs
+        )
+    # set overall title for the figure
+    fig.suptitle(fig_title, size = "x-large")
+    # if tight_layout, call tight_layout
+    if tight_layout is True:
+        fig.tight_layout()
+    # return figure and axes
+    return fig, axs
 
 
 if __name__ == "__main__":
