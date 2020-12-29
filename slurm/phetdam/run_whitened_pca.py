@@ -9,16 +9,16 @@ from mtml.utils.persist import persist_json, persist_pickle, remove_all_persist
 
 
 # attempt to find the results top-level directory
-results_home = find_results_home_ascending(".")
+RESULTS_HOME = find_results_home_ascending(".")
 
 # persistence decorator args
 persist_json_args = dict(
-    target = results_home + "/phetdam/vte_whitened_pca_params.json",
+    target = RESULTS_HOME + "/phetdam/vte/vte_whitened_pca_params.json",
     out_transform = lambda x: (x["pcas"][0].get_params(),
                                x["pcas"][1].get_params())
 )
 persist_pickle_args = dict(
-    target = results_home + "/phetdam/vte_whitened_pcas.pickle",
+    target = RESULTS_HOME + "/phetdam/vte/vte_whitened_pcas.pickle",
     out_transform = lambda x: x["pcas"]
 )
 # add persistence decorators and run
