@@ -5,7 +5,7 @@ import os.path
 # pylint: disable=import-error,relative-beyond-top-level
 from mtml.modeling.vte.decomposition import whitened_pca
 from mtml.utils.path import find_results_home_ascending
-from mtml.utils.persist import persist_json, persist_pickle, remove_all_persist
+from mtml.utils.persist import persist_json, persist_pickle
 
 
 # attempt to find the results top-level directory
@@ -23,11 +23,10 @@ persist_pickle_args = dict(
     target = VTE_RESULTS_DIR + "/vte_whitened_pcas.pickle",
     out_transform = lambda x: x["pcas"]
 )
-# add persistence decorators and run. removes effect of originally applied
-# persistence decorators (those are for local-only runs)
+# add persistence decorators and run
 task = persist_json(**persist_json_args)(
     persist_pickle(**persist_pickle_args)(
-        remove_all_persist(whitened_pca)
+        whitened_pca
     )
 )
 _ = task(report = True, random_seed = 7)
