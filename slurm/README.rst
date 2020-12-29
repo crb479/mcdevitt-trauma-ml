@@ -134,4 +134,4 @@ script will invoke the script with the Python interpreter.
    use a virtual environment to isolate your dependencies.
 
 .. [#] When you first login, you are typically dumped in
-   ``/home/[your_usename]``.
+   ``/home/[your_username]``.
