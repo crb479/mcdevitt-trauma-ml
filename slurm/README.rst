@@ -77,8 +77,8 @@ the repo is already in your home directory, no need to ``git clone``. Just pull
 the latest code from the repo, ``cd`` into it, and then run ``pip3 install .``
 to get the latest version of the code installed into the virtual environment.
 
-It's important to pull frequently and then ``cd`` back to the base directory to
-re-install your local copy of ``mtml`` in case you are using any of that code.
+Pull *frequently* and then ``cd`` back to the base directory to re-install your
+local copy of ``mtml`` if your are using any of that code.
 
 Submitting to Slurm
 ~~~~~~~~~~~~~~~~~~~
@@ -95,12 +95,12 @@ Writing to ``../results``
 Assuming that your directory for your Slurm ``bash`` scripts is located in the
 format described at the beginning of this ``README.rst``, a way to easily get
 access in Python to the ``results`` directory located next to the ``slurm``
-directory is to use ``mtml.utils.path.find_results_home_ascending``, which
-crawls up the directory tree from a given directory to find the absolute path
-to that ``results`` directory. Sample usage is show below, where it is assumed
-that the code is in a standalone Python script located in the directory
-``../slurm/phetdam`` along with a Slurm ``bash`` script will invoke the script
-with the Python interpreter.
+directory is to use the ``mtml.utils.path`` function
+``find_results_home_ascending``, which crawls up the directory tree from a given
+directory to find the absolute path to that ``results`` directory. Sample usage
+is show below, where it is assumed that the code is in a standalone Python
+script located in the directory ``../slurm/phetdam`` along with a Slurm ``bash``
+script will invoke the script with the Python interpreter.
 
 .. code:: python3
 
