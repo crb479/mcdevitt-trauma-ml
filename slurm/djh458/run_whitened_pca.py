@@ -9,7 +9,7 @@ from mtml.utils.persist import persist_json, persist_pickle, remove_all_persist
 
 
 # attempt to find the results top-level directory
-results_home = find_results_home_ascending()
+results_home = find_results_home_ascending(os.path.abspath("."))
 
 # persistence decorator args
 persist_json_args = dict(

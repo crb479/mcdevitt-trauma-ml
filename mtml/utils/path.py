@@ -4,8 +4,10 @@ import os
 import os.path
 
 
-def find_results_home_ascending(dirname = "results"):
-    """Go up the directory tree looking for the results home directory.
+def find_results_home_ascending(
+    cur_dir = os.path.abspath("."), dirname = "results"
+):
+    """From ``startpath``, ascend directory tree to find results home directory.
 
     .. warning::
 
@@ -15,8 +17,12 @@ def find_results_home_ascending(dirname = "results"):
     Typical use case is when executing a script on NYU HPC from the ``slurm``
     directory. There's no way to start up a package and somehow precompute the
     location of the ``results`` directory, but we can search up the directory
-    tree until we find it. If we fail, :class:`FileNotFoundError` is raised.
+    tree until we find it given a starting path. If we fail,
+    :class:`FileNotFoundError` is raised.
 
+    :param cur_dir: Absolute starting path. If not given, then the current
+        directory's absolute path is used (default).
+    :type cur_dir: str, optional
     :param dirname: Name of the results home directory. This should not need to
         be changed at all.
     :type dirname: str, optional
@@ -25,8 +31,12 @@ def find_results_home_ascending(dirname = "results"):
     :returns: Absolute path to the results home directory.
     :rtype: str
     """
-    # get current directory (absolute path)
-    cur_dir = os.path.abspath(".")
+    # if cur_dir doesn't exist, raise error
+    if not os.path.exists(cur_dir):
+        raise FileNotFoundError("cur_dir does not exist")
+    # must be a directory
+    if not os.path.isdir(cur_dir):
+        raise ValueError("cur_dir must be a directory path")
     # while we haven't reached the root directory yet (path is empty)
     while cur_dir != "":
         # get list of files in this directory
