@@ -28,19 +28,11 @@ from .data_transforms import replace_hdl_tot_chol_with_ratio
 from ...feature_selection.univariate import roc_auc_score_func
 from ...utils.extmath.eigenvalues import n_eigs_pct_trace
 from ...utils.models import json_safe_get_params
+from ...utils.path import find_results_home_ascending
 from ...utils.persist import persist_csv, persist_json, persist_pickle
 from ...utils.plotting import normalized_scree_plot
 
 
-@persist_json(
-    target = BASE_RESULTS_DIR + "/vte_whitened_pca_params.json", enabled = True,
-    out_transform = lambda x: (x["pcas"][0].get_params(), 
-                               x["pcas"][1].get_params())
-)
-@persist_pickle(
-    target = BASE_RESULTS_DIR + "/vte_whitened_pcas.pickle", enabled = True,
-    out_transform = lambda x: x["pcas"]
-)
 def whitened_pca(*, report = False, random_seed = None):
     """Analysis method that performs whitened PCA on the VTE data set.
 
@@ -394,9 +386,7 @@ def whitened_kernel_pca(
     # list of kernels to cycle through. note that "laplacian" is not shown as a
     # choice in the documentation, but internally, kernel computation is done
     # using sklearn.metrics.pairwise.pairwise_kernels, which does accept it.
-    kernels = dict(
-        kernel = ["linear", "poly", "rbf", "laplacian"]
-    )
+    kernels = dict(kernel = ["linear", "poly", "rbf", "laplacian"])
     # for both X_train and X_train_red, grid search across the kernels to find
     # the best kernel cross-validated on the training data. again use F1-score,
     # which is done internally in the ScoringKernelPCA. whitening is again
@@ -584,6 +574,7 @@ def whitened_kernel_pca_scree_from_pickle(
     fig.savefig(fig_path, dpi = dpi)
     # close manually
     matplotlib.pyplot.close(fig)
+
 
 # horizontal figure size was (12, 4)
 def _pcas_scree_from_pickle(
