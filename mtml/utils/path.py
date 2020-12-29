@@ -4,9 +4,7 @@ import os
 import os.path
 
 
-def find_results_home_ascending(
-    cur_dir = os.path.abspath("."), dirname = "results"
-):
+def find_results_home_ascending(cur_dir = ".", dirname = "results"):
     """From ``startpath``, ascend directory tree to find results home directory.
 
     .. warning::
@@ -20,8 +18,8 @@ def find_results_home_ascending(
     tree until we find it given a starting path. If we fail,
     :class:`FileNotFoundError` is raised.
 
-    :param cur_dir: Absolute starting path. If not given, then the current
-        directory's absolute path is used (default).
+    :param cur_dir: Starting path. If not given, then the current directory
+        where the function is executed is used (default).
     :type cur_dir: str, optional
     :param dirname: Name of the results home directory. This should not need to
         be changed at all.
@@ -31,6 +29,9 @@ def find_results_home_ascending(
     :returns: Absolute path to the results home directory.
     :rtype: str
     """
+    # change cur_dir to absolute path
+    cur_dir = os.path.abspath(".")
+    print(cur_dir)
     # if cur_dir doesn't exist, raise error
     if not os.path.exists(cur_dir):
         raise FileNotFoundError("cur_dir does not exist")
