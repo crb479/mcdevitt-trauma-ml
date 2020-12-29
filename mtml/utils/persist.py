@@ -6,6 +6,7 @@ These should not be used with lambda functions unless ``target`` is specified.
 from functools import wraps
 import inspect
 import json
+import math
 import pandas as pd
 import os.path
 import pickle
@@ -46,7 +47,9 @@ def _persist_pickle(func, enabled = True, target = None, out_transform = None,
                 pickle.dump(out_transform(res, **out_transform_kwargs),
                             wf, protocol = protocol)
         return res
-    
+
+    # add _persisted_func attribute to _persist_dec and return
+    _persist_dec._persisted_func = func
     return _persist_dec
 
 
@@ -133,6 +136,8 @@ def _persist_json(func, enabled = True, target = None, out_transform = None,
                           wf, indent = indent, **dump_kwargs)
         return res
     
+    # add _persisted_func attribute to _persist_dec and return
+    _persist_dec._persisted_func = func
     return _persist_dec
 
 
@@ -222,7 +227,9 @@ def _persist_csv(func = None, enabled = True, target = None, converter = None,
             converter(out_transform(res, **out_transform_kwargs),
                       target, **converter_kwargs)
         return res
-    
+
+    # add _persisted_func attribute to _persist_dec and return
+    _persist_dec._persisted_func = func
     return _persist_dec
 
 
@@ -263,3 +270,62 @@ def persist_csv(func = None, enabled = True, target = None, converter = None,
         return _wrap_dec
     # else return result
     return _wrap_dec(func)
+
+
+def remove_persist(func = None, n = 1):
+    """Return the underlying function wrapped by a ``persist`` decorator.
+
+    Each decorator maintains an attribute ``_persisted_func`` that holds the
+    function it is currently decorating. :func:`remove_persist` looks for that
+    attribute and returns it, effectively "undoing" the effect of the
+    ``persist`` decorator. :func:`remove_persist` can remove up to ``n``
+    ``persist`` decorators' effects and has no effect if ``func`` does not have
+    the attribute that it is looking for.
+
+    :param func: Function to have persistence decorator effect removed from
+    :type func: function
+    :param n: Maximum number of times :func:`remove_persist` will attempt to
+        access the original ``_persisted_func``. Automatically stops if the
+        current object is attempt to "unwrap" does not have this attribute.
+    :type n: int, optional
+    :rtype: function
+    """
+    # define new decorator that calls _remove_persist
+    def _wrap_dec(f):
+        return _remove_persist(f, n = n)
+    # if func is None, return _wrap_dec
+    if func is None:
+        return _wrap_dec
+    # else return result
+    return _wrap_dec(func)
+
+
+def remove_all_persist(func):
+    """Remove all ``persist`` decorator effects and return original function.
+
+    Equivalent to :func:`remove_persist` but with `n = 1000`.
+
+    :rtype: function
+    """
+    return _remove_persist(func, n = 1000)
+
+
+def _remove_persist(func, n = 1):
+    """Return the underlying function wrapped by a ``persist`` decorator.
+
+    Don't call by itself. Call through :func:`remove_persist`.
+
+    :rtype: function
+    """
+    # sanity check
+    if n < 1:
+        raise ValueError("n must be >= 1")
+    # until we reach n iterations, keep unrolling
+    for _ in range(n):
+        # break early if necessary
+        if not hasattr(func, "_persisted_func"):
+            return func
+        # else unroll
+        func = func._persisted_func
+    # return
+    return func
