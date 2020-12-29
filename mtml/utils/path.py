@@ -31,7 +31,6 @@ def find_results_home_ascending(cur_dir = ".", dirname = "results"):
     """
     # change cur_dir to absolute path
     cur_dir = os.path.abspath(".")
-    print(cur_dir)
     # if cur_dir doesn't exist, raise error
     if not os.path.exists(cur_dir):
         raise FileNotFoundError("cur_dir does not exist")
@@ -42,6 +41,8 @@ def find_results_home_ascending(cur_dir = ".", dirname = "results"):
     while cur_dir != "":
         # get list of files in this directory
         files = os.listdir(cur_dir)
+        print(cur_dir)
+        print(files)
         # if our desired directory name is in files and it is a directory, then
         # add "/" + dirname to cur_dir and break
         if dirname in files and os.path.isdir(dirname):
