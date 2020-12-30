@@ -8,6 +8,7 @@
 # thus there is also only one task (defaults, no need to specify).
 
 #SBATCH --job-name=djh458:whitened_pca
+#SBATCH --output=run_whitened_pca.out
 #SBATCH --mem=100M
 #SBATCH --time=00:00:05
 #SBATCH --cpus-per-task=1
