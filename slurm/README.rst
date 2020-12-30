@@ -104,6 +104,13 @@ help on a command. Also read the `Slurm best practices`__ since resources are
 shared and it is in everyone's interest to make use of compute time and memory
 as efficiently as possible.
 
+There are many Slurm commands, but the three essentials that you must know how
+to use are ``sbatch``, ``sacct``, and ``seff``. ``sbatch`` is for submitting
+your batch scripts to the scheduler, ``sacct`` gives you details are your
+submitted/completed jobs, and ``seff``, when given a job ID, yields time, CPU,
+and memory usage statistics which are helpful for paring down the amount of
+resources needed to the bare minimum.
+
 .. __: https://sites.google.com/a/nyu.edu/nyu-hpc/documentation/greene
 
 .. __: https://slurm.schedmd.com/pdfs/summary.pdf
