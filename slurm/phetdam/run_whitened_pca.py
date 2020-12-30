@@ -7,7 +7,6 @@ from mtml.modeling.vte.decomposition import whitened_pca
 from mtml.utils.path import find_results_home_ascending
 from mtml.utils.persist import persist_json, persist_pickle
 
-
 # attempt to find the results top-level directory
 RESULTS_HOME = find_results_home_ascending(".")
 # my directory for VTE results
