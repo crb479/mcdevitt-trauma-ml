@@ -329,7 +329,7 @@ class ScoringKernelPCA(KernelPCA):
 )
 def whitened_kernel_pca(
     *, report = False, random_seed = None, metric = "f1_score", cv = 3,
-    n_jobs = -1
+    n_jobs = -1, verbose = False
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
 
@@ -396,14 +396,14 @@ def whitened_kernel_pca(
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed
-        ), kernels, n_jobs = n_jobs, cv = cv
+        ), kernels, n_jobs = n_jobs, cv = cv, verbose = int(verbose)
     )
     pca_red_gscv = GridSearchCV(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed
-        ), kernels, n_jobs = n_jobs, cv = cv
+        ), kernels, n_jobs = n_jobs, cv = cv, verbose = int(verbose)
     )
     # fit on the (pre-standardized) training data. use y_train in order for the
     # score method of the ScoringKernelPCA to work correctly.
