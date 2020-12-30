@@ -98,11 +98,11 @@ Submitting to Slurm
 
 The NYU HPC guide for submitting jobs to Slurm on Greene, which is re-linked
 `here`__, walks you through basic use of ``sbatch`` and ``srun`` with Slurm.
-The `Slurm cheatsheet`__ may also be helpful while the `online documentation`__
-provides more details. One can also do ``man sbatch`` and so on for plaintext
-help on a command. Also read the `Slurm best practices`__ since resources are
-shared and it is in everyone's interest to make use of compute time and memory
-as efficiently as possible.
+The `Slurm cheatsheet`__ [#]_ may also be helpful while the
+`online documentation`__ provides more details. One can also do ``man sbatch``
+and so on for plaintext help on a command. Also read the
+`Slurm best practices`__ since resources are shared and it is in everyone's
+interest to make use of compute time and memory as efficiently as possible.
 
 There are many Slurm commands, but the three essentials that you must know how
 to use are ``sbatch``, ``sacct``, and ``seff``. ``sbatch`` is for submitting
@@ -119,6 +119,12 @@ resources needed to the bare minimum.
 
 .. __: https://sites.google.com/a/nyu.edu/nyu-hpc/documentation/prince/batch/
    slurm-best-practices
+
+.. [#] This might be a little out of date. For example, there are many
+   environment variables listed in the `Slurm documentation for sbatch`__ that
+   are not mentioned in the sheet.
+
+.. __: https://slurm.schedmd.com/sbatch.html
 
 Writing to ``../results``
 ~~~~~~~~~~~~~~~~~~~~~~~~~

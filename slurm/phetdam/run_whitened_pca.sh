@@ -5,13 +5,13 @@
 # for values up to 50 MB so --mem=100M was chosen.
 #
 # there is only one CPU that is needed since everything is run sequentially and
-# thus there is also only one task (defaults, no need to specify).
+# thus there is also only one task (defaults, no need to specify). we do specify
+# that we only want a single node, however.
 
 #SBATCH --job-name=djh458:whitened_pca
-#SBATCH --output=run_whitened_pca.out
+#SBATCH --output=whitened_pca.out
 #SBATCH --mem=100M
 #SBATCH --time=00:00:05
-#SBATCH --cpus-per-task=1
 #SBATCH --nodes=1
 
 # activate venv, run, deactivate
