@@ -1,11 +1,8 @@
 #!/bin/bash
 # slurm batch job to run run_whitened_pca.py
 #
-# note that this job usually completes in a couple seconds, hence the small
-# value of time used. checking with seff also shows that not even a couple of
-# MB are needed by this job so i pass in --mem (memory per node). however, you
-# can't pass in a really small number (get OUT_OF_MEMORY error for some reason),
-# so i've chosen to set it at 100 MB.
+# usually completes in ~2 s and uses <1.5 M memory. however, got OUT_OF_MEMORY
+# for values up to 50 MB so --mem=100M was chosen.
 #
 # there is only one CPU that is needed since everything is run sequentially and
 # thus there is also only one task (defaults, no need to specify).
