@@ -73,5 +73,5 @@ if __name__ == "__main__":
     )
     _ = task(
         report = True, random_seed = 7, metric = args.metric,
-        cv = args.cv_folds, n_jobs = args.n_jobs
+        cv = args.cv_folds, n_jobs = args.njobs
     )
