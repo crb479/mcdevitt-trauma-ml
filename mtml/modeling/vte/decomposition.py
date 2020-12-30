@@ -302,36 +302,17 @@ class ScoringKernelPCA(KernelPCA):
         return Z
 
 
-# save cv results for the full and reduced kernel PCA
-@persist_csv(
-    target = BASE_RESULTS_DIR + "/vte_whitened_kernel_pca_cv_full.csv",
-    enabled = True,
-    out_transform = lambda x: x["cv_results"][0]
-)
-@persist_csv(
-    target = BASE_RESULTS_DIR + "/vte_whitened_kernel_pca_cv_red.csv",
-    enabled = True,
-    out_transform = lambda x: x["cv_results"][1]
-)
-# persist ScoringKernelPCA hyperparameters and actual models. note that passing
-# safe = True replaces estimators with their full class names. deep = True by
-# default so the nested estimator hyperparameters are included.
-@persist_json(
-    target = BASE_RESULTS_DIR + "/vte_whitened_kernel_pca_params.json",
-    enabled = True,
-    out_transform = lambda x: (x["pcas"][0].get_params(safe = True), 
-                               x["pcas"][1].get_params(safe = True))
-)
-@persist_pickle(
-    target = BASE_RESULTS_DIR + "/vte_whitened_kernel_pcas.pickle",
-    enabled = True,
-    out_transform = lambda x: x["pcas"]
-)
 def whitened_kernel_pca(
     *, report = False, random_seed = None, metric = "f1_score", cv = 3,
-    n_jobs = -1, verbose = False
+    n_jobs = 1, verbosity = 0
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
+
+    .. note::
+    
+       Although this method can use multiprocessing to parallelize the grid
+       search, it is still limited to use on a single machine (node), i.e. it
+       cannot be run in a distributed fashion.
 
     Kernel PCA is performed twice for each kernel type, first on all the columns
     specified by ``VTE_CONT_INPUT_COLS`` and then on the seven columns chosen by
@@ -352,7 +333,21 @@ def whitened_kernel_pca(
     ``plotting_dir``.
 
     Parameter descriptions in progress.
-    
+
+    :param report: Whether or not to produce a report after fitting
+    :type report: bool, optional
+    :param random_seed: Global random seed for reproducible output
+    :type random_seed: int, optional
+    :param metric: Metric to pass to the :class:`ScoringKernelPCA` object. Must
+        be a valid member of :mod:`sklearn.metrics`.
+    :type metric: str, optional
+    :param cv: Number of cross-validation folds to fit kernel PCAs on.
+    :type cv: int, optional
+    :param n_jobs: Number of processes for ``joblib`` to use for parallel
+        multiprocessing execution of grid search.
+    :type n_jobs: int, optional
+    :param verbosity: Level of verbosity of the GridSearchCV
+    :type verbosity: int, optional
     :rtype: dict
     """
     # get data set of continuous features from vte_slp_factory
@@ -391,14 +386,14 @@ def whitened_kernel_pca(
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed
-        ), kernels, n_jobs = n_jobs, cv = cv, verbose = int(verbose)
+        ), kernels, n_jobs = n_jobs, cv = cv, verbose = verbosity
     )
     pca_red_gscv = GridSearchCV(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed
-        ), kernels, n_jobs = n_jobs, cv = cv, verbose = int(verbose)
+        ), kernels, n_jobs = n_jobs, cv = cv, verbose = verbosity
     )
     # fit on the (pre-standardized) training data. use y_train in order for the
     # score method of the ScoringKernelPCA to work correctly.

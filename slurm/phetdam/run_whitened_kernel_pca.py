@@ -1,7 +1,8 @@
 __doc__ = """Runs :func:`mtml.modeling.vte.decomposition.whitened_kernel_pca`.
 
-Takes in optional command-line arguments for metric, cross-validation folds, and
-number of jobs to use (passed in externally from bash script).
+Takes in optional command-line arguments for metric, cross-validation folds,
+number of jobs (processes) to use, and the level of GridSearchCV verbosity. All
+parameters are passed in externally from bash script submitted to Slurm.
 """
 
 import argparse
@@ -39,19 +40,25 @@ if __name__ == "__main__":
         "-n", "--njobs", default = 1, type = int,
         help = "Number of processes for joblib to use during multiprocessing"
     )
+    arp.add_argument(
+        "-v", "--verbose", nargs = "?", default = 1, const = 1, type = int,
+        help = "Level of GridSearchCV verbosity"
+    )
     # parse arguments
     args = arp.parse_args()
-    # persistence decorator args. need safe = True to make params JSON safe
+    # persist ScoringKernelPCA hyperparameters. need safe = True to make params
+    # JSON safe (embedded LogisticRegression model is in there).
     persist_json_args = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_kernel_pca_params.json",
         out_transform = lambda x: (x["pcas"][0].get_params(safe = True),
                                    x["pcas"][1].get_params(safe = True))
     )
+    # persist ScoringKernelPCA models themselves
     persist_pickle_args = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_kernel_pcas.pickle",
         out_transform = lambda x: x["pcas"]
     )
-    # args_1 for full data, args_2 for reduced data
+    # args_1 for full data, args_2 for reduced data; truncated CV results
     persist_csv_args_1 = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_kernel_pca_cv_full.csv",
         out_transform = lambda x: x["cv_results"][0]
@@ -73,5 +80,5 @@ if __name__ == "__main__":
     )
     _ = task(
         report = True, random_seed = 7, metric = args.metric,
-        cv = args.cv_folds, n_jobs = args.njobs
+        cv = args.cv_folds, n_jobs = args.njobs, verbosity = args.verbose
     )
