@@ -55,6 +55,17 @@ where ``pip`` will install dependencies after activation. For subsequent logins,
 don't use ``module`` and just ``source <your_venv_dir>/bin/activate`` to start
 using your virtual environment.
 
+.. __: https://docs.python.org/3/tutorial/venv.html
+
+.. [#] Rather, the *only* version of Python 3 available on Greene.
+
+.. [#] The official guide says to do ``pip install`` with the ``--user`` flag,
+   but that still doesn't prevent the issue of having dependency conflicts. Just
+   use a virtual environment to isolate your dependencies.
+
+.. [#] When you first login, you are typically dumped in
+   ``/home/[your_username]``.
+
 Developing with ``mtml``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -80,6 +91,8 @@ to get the latest version of the code installed into the virtual environment.
 Pull *frequently* and then ``cd`` back to the base directory to re-install your
 local copy of ``mtml`` if your are using any of that code.
 
+.. __: https://github.com/crb479/mcdevitt-trauma-ml
+
 Submitting to Slurm
 ~~~~~~~~~~~~~~~~~~~
 
@@ -87,7 +100,18 @@ The NYU HPC guide for submitting jobs to Slurm on Greene, which is re-linked
 `here`__, walks you through basic use of ``sbatch`` and ``srun`` with Slurm.
 The `Slurm cheatsheet`__ may also be helpful while the `online documentation`__
 provides more details. One can also do ``man sbatch`` and so on for plaintext
-help on a command.
+help on a command. Also read the `Slurm best practices`__ since resources are
+shared and it is in everyone's interest to make use of compute time and memory
+as efficiently as possible.
+
+.. __: https://sites.google.com/a/nyu.edu/nyu-hpc/documentation/greene
+
+.. __: https://slurm.schedmd.com/pdfs/summary.pdf
+
+.. __: https://slurm.schedmd.com/documentation.html
+
+.. __: https://sites.google.com/a/nyu.edu/nyu-hpc/documentation/prince/batch/
+   slurm-best-practices
 
 Writing to ``../results``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,22 +140,3 @@ script will invoke the script with the Python interpreter.
    # dump in ../results/phetdam/np_log_vals.json
    with open(RESULTS_HOME + "/phetdam/np_log_vals.json", "w") as f:
       json.dump(vals, f)
-
-.. __: https://docs.python.org/3/tutorial/venv.html
-
-.. __: https://github.com/crb479/mcdevitt-trauma-ml
-
-.. __: https://sites.google.com/a/nyu.edu/nyu-hpc/documentation/greene
-
-.. __: https://slurm.schedmd.com/pdfs/summary.pdf
-
-.. __: https://slurm.schedmd.com/documentation.html
-
-.. [#] Rather, the *only* version of Python 3 available on Greene.
-
-.. [#] The official guide says to do ``pip install`` with the ``--user`` flag,
-   but that still doesn't prevent the issue of having dependency conflicts. Just
-   use a virtual environment to isolate your dependencies.
-
-.. [#] When you first login, you are typically dumped in
-   ``/home/[your_username]``.
