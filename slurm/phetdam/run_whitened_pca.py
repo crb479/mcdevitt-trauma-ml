@@ -12,12 +12,13 @@ RESULTS_HOME = find_results_home_ascending(".")
 # my directory for VTE results
 VTE_RESULTS_DIR = RESULTS_HOME + "/phetdam/vte"
 
+
 if __name__ == "__main__":
     # persistence decorator args
     persist_json_args = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_pca_params.json",
         out_transform = lambda x: (x["pcas"][0].get_params(),
-                                x["pcas"][1].get_params())
+                                   x["pcas"][1].get_params())
     )
     persist_pickle_args = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_pcas.pickle",
