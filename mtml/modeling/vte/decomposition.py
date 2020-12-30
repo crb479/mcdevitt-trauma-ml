@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 
 # pylint: disable=relative-beyond-top-level
 from .. import BASE_RESULTS_DIR
-from ... import VTE_CONT_INPUT_COLS, VTE_OUTPUT_COLS
+from ... import VTE_CONT_INPUT_COLS, VTE_OUTPUT_COLS, VTE_QIDA_INPUT_COLS
 from ...data.vte import vte_slp_factory
 from .data_transforms import replace_hdl_tot_chol_with_ratio
 from ...feature_selection.univariate import roc_auc_score_func
@@ -362,14 +362,9 @@ def whitened_kernel_pca(
         random_state = random_seed
     )
     # get reduced X_train and X_test by selecting only the 7 selected columns
-    best_cols = list(
-        pd.read_csv(
-            BASE_RESULTS_DIR + "/vte_selected_cols.csv", index_col = 0
-        ).index
-    )
     X_train_red, X_test_red, _, _ = vte_slp_factory(
         data_transform = replace_hdl_tot_chol_with_ratio,
-        inputs = best_cols, targets = VTE_OUTPUT_COLS, dropna = True,
+        inputs = VTE_QIDA_INPUT_COLS, targets = VTE_OUTPUT_COLS, dropna = True,
         random_state = random_seed
     )
     # fit StandardScalers to training data and use them to normalize the data
@@ -437,11 +432,11 @@ def whitened_kernel_pca(
              "---- VTE kernel PCA on top 7 columns " + "-" * 43)
         ):
             print(title, end = "\n\n")
-            # if pca == pca_red, then also print the selected columns. using
-            # np.array on the list best_cols allows it to wrap at 80 columns.
+            # if pca == pca_red, then also print VTE_QIDA_INPUT_COLS. using
+            # np.array on the tuple allows wrapping at 80 columns.
             if pca == pca_red:
                 print("selected columns (by univariate AUC):\n"
-                      f"{np.array(best_cols)}\n")
+                      f"{np.array(VTE_QIDA_INPUT_COLS)}\n")
             # print out estimator, cv folds, metric info
             print(f"estimator: {pca.estimator.__class__.__name__}\n"
                   f"cv folds: {cv}\nmetric: {metric}\n")

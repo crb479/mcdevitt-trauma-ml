@@ -77,6 +77,21 @@ columns ``gender_male0_female1`` and ``anticoagulant_use_yes1_no0``. See
 :attr:`VTE_INPUT_COLS` docstring for more details.
 """
 
+VTE_QIDA_INPUT_COLS = (
+    "d_dimer_result", "crp_result", "age", "glucose_result", "plt_result",
+    "trig_result", "ldl_result"
+)
+"""Seven most predictive VTE data set columns, by univariate ROC AUC.
+
+Selected by means of :class:`sklearn.feature_selection.SelectKBest` where the
+``score_func`` argument was passed
+:func:`mtml.feature_selection.univariate.roc_auc_score_func` with
+``random_state = 7``. Names are in descending order by ROC AUC for convenience.
+
+The choice of the variable name makes sense if "qida" is read with the
+"expected" Chinese pronunciation.
+"""
+
 VTE_OUTPUT_COLS = ["thrombosis_present_yes1_no0"]
 "Target column for VTE data. 1 if venous thromboembolism is present, 0 if not."
 
