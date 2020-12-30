@@ -7,3 +7,5 @@ mtml/tests/*.csv
 **/*.xls
 **/*.xlsx
 /na_pct_by_col.csv
+# ignore output files from slurm/other programs
+**/*.out
