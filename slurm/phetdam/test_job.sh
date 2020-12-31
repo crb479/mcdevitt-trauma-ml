@@ -8,7 +8,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=100M
-#SBATCH --time=00:00:10
+#SBATCH --time=00:02:00
 
 # joblib verbosity
 VERBOSITY=1
