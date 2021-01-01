@@ -9,6 +9,7 @@ from joblib import delayed, parallel_backend, Parallel
 import math
 import numpy as np
 import os
+import platform
 import time
 
 
@@ -17,12 +18,13 @@ def slow_sqrt(x, delay = 1):
 
     Delay used for simulating expensive computation.
 
-    :returns: Tuple of result and PID of process executing the function.
+    :returns: Tuple of result and hostname-qualified PID of process executing
+        the function (hostname:PID)
     :rtype: tuple
     """
     time.sleep(delay)
-    # return result and PID of process executing function
-    return math.sqrt(x), os.getpid()
+    # return result and hostname-qualified PID of process executing function
+    return math.sqrt(x), f"{platform.node()}:{os.getpid()}"
 
 
 if __name__ == "__main__":
@@ -51,8 +53,8 @@ if __name__ == "__main__":
     print(f"total node cores: {os.cpu_count()}")
     # print number of CPUS this process was given
     print(f"total cores granted: {len(os.sched_getaffinity(0))}")
-    # print main process's PID
-    print(f"parent PID: {os.getpid()}")
+    # print main process's hostname:PID
+    print(f"parent PID: {platform.node()}:{os.getpid()}")
     # with the given backend and a particular parallel instance
     with parallel_backend(args.backend, n_jobs = args.njobs):
         res = Parallel(verbose = args.verbose)(
