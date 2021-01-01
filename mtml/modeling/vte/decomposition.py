@@ -303,8 +303,8 @@ class ScoringKernelPCA(KernelPCA):
 
 
 def whitened_kernel_pca(
-    *, report = False, random_seed = None, metric = "f1_score", cv = 3,
-    n_jobs = 1, verbosity = 0
+    *, report = False, random_seed = None, metric = "f1_score", copy_X = False,
+    cv = 3, n_jobs = 1, verbosity = 0
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
 
@@ -331,8 +331,6 @@ def whitened_kernel_pca(
     and if ``plotting_dir`` is not ``None``, then plots of the explained
     variance ratios will be written to the directory path provided to
     ``plotting_dir``.
-
-    Parameter descriptions in progress.
 
     :param report: Whether or not to produce a report after fitting
     :type report: bool, optional
@@ -385,14 +383,16 @@ def whitened_kernel_pca(
         ScoringKernelPCA( # kernel PCA for full continuous columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
-            metric = metric, whiten = True, random_state = random_seed
+            metric = metric, whiten = True, random_state = random_seed,
+            copy_X = copy_X
         ), kernels, n_jobs = n_jobs, cv = cv, verbose = verbosity
     )
     pca_red_gscv = GridSearchCV(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
-            metric = metric, whiten = True, random_state = random_seed
+            metric = metric, whiten = True, random_state = random_seed,
+            copy_X = copy_X
         ), kernels, n_jobs = n_jobs, cv = cv, verbose = verbosity
     )
     # fit on the (pre-standardized) training data. use y_train in order for the
