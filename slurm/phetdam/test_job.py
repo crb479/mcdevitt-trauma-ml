@@ -85,4 +85,4 @@ if __name__ == "__main__":
     # collect PIDs + memory usage and save unique ones
     pids = np.unique([pid for _, pid in res])
     # print unique PIDs
-    print(f"unique PIDs + memory usage (K):\n{pids}")
+    print(f"unique PIDs + max memory usage (K):\n{pids}")
