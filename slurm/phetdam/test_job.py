@@ -12,6 +12,7 @@ import math
 import numpy as np
 import os
 import platform
+import resource
 import time
 
 
@@ -21,12 +22,17 @@ def slow_sqrt(x, delay = 1):
     Delay used for simulating expensive computation.
 
     :returns: Tuple of result and hostname-qualified PID of process executing
-        the function (hostname:PID)
+        the function with max resident set size in K (hostname:PID,mem)
     :rtype: tuple
     """
     time.sleep(delay)
-    # return result and hostname-qualified PID of process executing function
-    return math.sqrt(x), f"{platform.node()}:{os.getpid()}"
+    # return result, hostname-qualified PID of process executing function, and
+    return (
+        math.sqrt(x), (
+            f"{platform.node()}:{os.getpid()},"
+            f"{resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}K"
+        )
+    )
 
 
 if __name__ == "__main__":
@@ -76,7 +82,7 @@ if __name__ == "__main__":
         res = Parallel(verbose = args.verbose)(
             delayed(slow_sqrt)(x ** 2) for x in ar
         )
-    # collect PIDs and save unique ones
+    # collect PIDs + memory usage and save unique ones
     pids = np.unique([pid for _, pid in res])
     # print unique PIDs
-    print(f"unique PIDs:\n{pids}")
+    print(f"unique PIDs + memory usage (K):\n{pids}")
