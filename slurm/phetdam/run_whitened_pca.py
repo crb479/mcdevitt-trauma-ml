@@ -36,18 +36,19 @@ if __name__ == "__main__":
             whitened_pca
         )
     )
-    # start Client using SLURMCluster with 1 worker and submit task to Client
-    client = Client(
-        SLURMCluster(
-            cores = 1,
-            memory = "200M",
-            processes = 1,
-            local_directory = get_scratch_dir(),
-            shebang = "#!/usr/bin/bash",
-            walltime = "00:00:10"
-        )
+    # SLURMCluster started with a single job
+    cluster = SLURMCluster(
+        cores = 1,
+        memory = "200M",
+        processes = 1,
+        local_directory = get_scratch_dir(),
+        shebang = "#!/usr/bin/bash",
+        walltime = "00:00:10"
     )
+    cluster.scale(jobs = 1)
     #client = Client(LocalCluster(n_workers = 1))
+    # initialize client with SLURMCluster and receive task
+    client = Client(cluster)
     _ = client.submit(task, report = True, random_seed = 7)
     # get and print node-qualified PID + max RSS
     node, pid = platform.node(), os.getpid()
