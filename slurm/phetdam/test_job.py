@@ -87,7 +87,7 @@ if __name__ == "__main__":
             # only one job on one node
             cluster.scale(jobs = 1)
             # print the job script that will be generated
-            print(cluster.job_script)
+            print(cluster.job_script())
         # else set cluster to None
         else:
             cluster = None
@@ -108,7 +108,7 @@ if __name__ == "__main__":
         else:
             res_dict[pid] = max(res_dict[pid], max_rss)
     # set res_pairs to pid, max_rss in K pairs
-    res_pairs = [f"{pid},{max_rss}K" for pid, max_rss in res_dict.values()]
+    res_pairs = [f"{pid},{max_rss}K" for pid, max_rss in res_dict.items()]
     # for each unique PID, get max max_rss (these can differ based on the time
     # of reporting, so we need to take their max to get unique max_rss)
     # print unique PIDs
