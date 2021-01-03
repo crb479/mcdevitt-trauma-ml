@@ -13,6 +13,7 @@ import math
 import numpy as np
 import os
 import platform
+import pwd
 import resource
 import time
 
@@ -72,8 +73,9 @@ if __name__ == "__main__":
     print(f"parent PID: {platform.node()}:{os.getpid()}")
     # if backend == "dask"
     if args.backend == "dask":
-        # debug: check if getlogin works as expected
-        print(os.getlogin())
+        # debug: check if getlogin works as expected (doesn't since batch file
+        # sent to non-login shell) so use pwd.getpwuid + os.getuid instead
+        print(pwd.getpwuid(os.getuid())[0])
         # if jobqueue_cluster is True, make SLURMCluster cluster
         if args.jobqueue_cluster:
             # single job, 10 processes, 10 cores (hardcoded). use infiniband
