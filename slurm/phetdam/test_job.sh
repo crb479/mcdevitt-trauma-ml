@@ -7,7 +7,7 @@
 #SBATCH --output=test_job.out
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=10
-#SBATCH --mem=100M
+#SBATCH --mem=400M
 #SBATCH --time=00:00:30
 
 # joblib verbosity
