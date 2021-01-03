@@ -47,9 +47,6 @@ if __name__ == "__main__":
         walltime = "00:00:10"
     )
     cluster.scale(jobs = 1)
-    # initalize StringIO to serve as in-memory buffer for the report since
-    # stdout will not be collected by the worker
-    stream = io.StringIO()
     # initialize client with SLURMCluster
     client = Client(cluster)
     # decorator that returns args, kwargs and result of function call. this
