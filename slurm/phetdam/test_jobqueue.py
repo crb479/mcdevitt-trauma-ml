@@ -44,18 +44,11 @@ if __name__ == "__main__":
         description = __doc__,
         formatter_class = argparse.RawDescriptionHelpFormatter
     )
+    # add all optional arguments
     arp.add_argument(
         "-b", "--backend", default = "dask",
         help = ("Backend joblib should use to manage multiprocessing. Do NOT "
                 "change this value (not using loky anymore)")
-    )
-    arp.add_argument(
-        "-n", "--njobs", default = 1, type = int,
-        help = ("Number of processes for joblib to use during multiprocessing "
-                "if --jobqueue-config is not passed a JSON config file. if "
-                "--jobqueue-config does get a JSON config file, then this is "
-                "the number of workers that will be started by a dask "
-                "LocalCluster passed to the dask Client.")
     )
     arp.add_argument(
         "-j", "--jobqueue-config",
@@ -64,6 +57,14 @@ if __name__ == "__main__":
                 "dask_jobqueue. --backend=dask required (default). all kwargs "
                 "for the SLURMCluster can be specified except for the shebang "
                 "and local_directory args, which are hardcoded.")
+    )
+    arp.add_argument(
+        "-n", "--njobs", default = 1, type = int,
+        help = ("Number of processes for joblib to use during multiprocessing "
+                "if --jobqueue-config is not passed a JSON config file. if "
+                "--jobqueue-config does get a JSON config file, then this is "
+                "the number of workers that will be started by a dask "
+                "LocalCluster passed to the dask Client.")
     )
     arp.add_argument(
         "-v", "--verbose", nargs = "?", default = 1, const = 1, type = int,
