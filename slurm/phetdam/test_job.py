@@ -6,7 +6,8 @@ adjustable delay to simulate an expensive computation.
 
 # pylint: disable=import-error
 import argparse
-from distributed import Client
+from dask.distributed import Client
+from dask_jobqueue import SLURMCluster
 from joblib import delayed, parallel_backend, Parallel
 import math
 import numpy as np
@@ -50,10 +51,10 @@ if __name__ == "__main__":
         help = "Number of processes for joblib to use during multiprocessing"
     )
     arp.add_argument(
-        "-j", "--jobqueue-cluster", default = None,
-        help = ("Valid name of a dask_jobqueue cluster class for scheduling on "
-                "particular distributed HPC systems. --backend=dask required "
-                "else this argument will simply be ignored.")
+        "-j", "--jobqueue-cluster", action = "store_true",
+        help = ("Pass to use a SLURMCluster set up by dask_jobqueue. "
+                "Parameters are hardcoded. --backend=dask required else this "
+                "argument will simply be ignored.")
     )
     arp.add_argument(
         "-v", "--verbose", nargs = "?", default = 1, const = 1, type = int,
@@ -71,12 +72,23 @@ if __name__ == "__main__":
     print(f"parent PID: {platform.node()}:{os.getpid()}")
     # if backend == "dask"
     if args.backend == "dask":
-        # if jobqueue_cluster is None, make local cluster
-        if args.jobqueue_cluster is None:
-            client = Client()
-        # else make distributed cluster using jobqueue_cluster name
+        # debug: check if getlogin works as expected
+        print(os.getlogin())
+        # if jobqueue_cluster is True, make SLURMCluster cluster
+        if args.jobqueue_cluster:
+            # single job, 10 processes, 10 cores (hardcoded). use infiniband
+            # for faster IPC. local_directory is my scratch directory 
+            cluster = SLURMCluster(
+                cores = 10,
+                memory = "400M",
+                processes = 10,
+                interface = "ib0"
+            )
+        # else set cluster to None
         else:
-            raise NotImplementedError("no distributed implementation")
+            cluster = None
+        # setup dask Client
+        client = Client(cluster)
     # with the given backend and a particular parallel instance
     with parallel_backend(args.backend, n_jobs = args.njobs):
         res = Parallel(verbose = args.verbose)(

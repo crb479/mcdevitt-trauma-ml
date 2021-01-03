@@ -7,6 +7,7 @@ For example, principal components analysis (eigendecomposition/SVD).
 
 # pylint: disable=import-error
 from functools import partial
+from joblib import parallel_backend
 import matplotlib.cm
 import matplotlib.pyplot as plt
 import math
@@ -304,7 +305,7 @@ class ScoringKernelPCA(KernelPCA):
 
 def whitened_kernel_pca(
     *, report = False, random_seed = None, metric = "f1_score", copy_X = False,
-    cv = 3, n_jobs = 1, verbosity = 0
+    cv = 3, backend = "loky", n_jobs = 1, verbosity = 0
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
 
@@ -341,6 +342,9 @@ def whitened_kernel_pca(
     :type metric: str, optional
     :param cv: Number of cross-validation folds to fit kernel PCAs on.
     :type cv: int, optional
+    :param backend: Name of backend to use for multiprocessing. Defaults to
+        ``"loky"``. Use ``"dask"`` in conjunction with 
+    :type backend: str, optional
     :param n_jobs: Number of processes for ``joblib`` to use for parallel
         multiprocessing execution of grid search.
     :type n_jobs: int, optional
@@ -379,13 +383,14 @@ def whitened_kernel_pca(
     # the best kernel cross-validated on the training data. again use F1-score,
     # which is done internally in the ScoringKernelPCA. whitening is again
     # applied to be friendly for scaling-sensitive models.
+    # note: no n_jobs so that parallel_backend context manager can be used
     pca_full_gscv = GridSearchCV(
         ScoringKernelPCA( # kernel PCA for full continuous columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
-        ), kernels, n_jobs = n_jobs, cv = cv, verbose = verbosity
+        ), kernels, cv = cv, verbose = verbosity
     )
     pca_red_gscv = GridSearchCV(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
@@ -393,12 +398,13 @@ def whitened_kernel_pca(
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
-        ), kernels, n_jobs = n_jobs, cv = cv, verbose = verbosity
+        ), kernels, cv = cv, verbose = verbosity
     )
     # fit on the (pre-standardized) training data. use y_train in order for the
     # score method of the ScoringKernelPCA to work correctly.
-    pca_full_gscv.fit(X_train, y_train)
-    pca_red_gscv.fit(X_train_red, y_train)
+    with parallel_backend(backend, n_jobs = n_jobs):
+        pca_full_gscv.fit(X_train, y_train)
+        pca_red_gscv.fit(X_train_red, y_train)
     # best ScoringKernelPCA for each grid search across kernels
     pca_full = pca_full_gscv.best_estimator_
     pca_red = pca_red_gscv.best_estimator_
