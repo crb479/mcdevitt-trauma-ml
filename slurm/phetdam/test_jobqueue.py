@@ -19,6 +19,8 @@ import pwd
 import resource
 import time
 
+from mtml.utils.path import get_scratch_dir
+
 
 def slow_sqrt(x, delay = 1):
     """Square root function delayed by ``delay`` seconds.
@@ -86,7 +88,7 @@ if __name__ == "__main__":
             # local_directory is user's scratch directory and use bash for
             # shebang. read other options from JSON config dict.
             cluster = SLURMCluster(
-                local_directory = f"/scratch/{pwd.getpwuid(os.getuid())[0]}",
+                local_directory = get_scratch_dir(),
                 shebang = "#!/usr/bin/bash",
                 **config
             )
@@ -126,5 +128,5 @@ if __name__ == "__main__":
     print(f"unique PIDs + max memory usage (K):\n{res_pairs}\n")
     # number of processes spawned
     print(f"worker processes: {len(res_pairs)}")
-    # print computed qvalues
+    # print computed values
     print(f"results:\n{vals}")

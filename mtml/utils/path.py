@@ -2,6 +2,7 @@ __doc__ = "Path-related utilities."
 
 import os
 import os.path
+import pwd
 
 
 def find_results_home_ascending(cur_dir = ".", dirname = "results"):
@@ -55,3 +56,15 @@ def find_results_home_ascending(cur_dir = ".", dirname = "results"):
         )
     # else return, we are done
     return cur_dir
+
+
+def get_scratch_dir():
+    """Returns the path to your ``/scratch`` directory on Greene.
+
+    More precisely, it uses ``pwd.getpwuid(os.getuid())[0]`` to retrieve your
+    login name given your user ID and then prepends ``/scratch/`` to the value.
+    This method of login name retrieval is available only on Unix-like systems.
+
+    :rtype: str
+    """
+    return f"/scratch/{pwd.getpwuid(os.getuid())[0]}"
