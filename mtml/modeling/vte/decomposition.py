@@ -20,6 +20,7 @@ from sklearn.linear_model import LogisticRegression
 import sklearn.metrics
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
+import sys
 
 # pylint: disable=relative-beyond-top-level
 from .. import BASE_RESULTS_DIR
@@ -34,7 +35,7 @@ from ...utils.persist import persist_csv, persist_json, persist_pickle
 from ...utils.plotting import normalized_scree_plot
 
 
-def whitened_pca(*, report = False, random_seed = None):
+def whitened_pca(*, report = False, stream = sys.stdout, random_seed = None):
     """Analysis method that performs whitened PCA on the VTE data set.
 
     PCA is performed twice, first on all the columns specified by
@@ -101,16 +102,17 @@ def whitened_pca(*, report = False, random_seed = None):
             ("---- VTE PCA on VTE_CONT_INPUT_COLS " + "-" * 44,
              "---- VTE PCA on top 7 columns " + "-" * 50)
         ):
-            print(title, end = "\n\n")
+            print(title, end = "\n\n", file = stream)
             # print the selected columns if pca is pca_red
             if pca == pca_red:
                 print(
-                    f"selected columns (by univariate AUC):\n{kbest_cols}\n"
+                    f"selected columns (by univariate AUC):\n{kbest_cols}\n",
+                    file = stream
                 )
             print(
                 f"explained variance ratios:\n{pca.explained_variance_ratio_}"
                 f"\n\nn_components needed to explain 95% variance: {n_comp_95}",
-                end = "\n\n"
+                end = "\n\n", file = stream
             )
     # return PCA objects and (standardized) data so that they can be
     # appropriately persisted/passed to another analysis/model fitting method
@@ -304,7 +306,8 @@ class ScoringKernelPCA(KernelPCA):
 
 
 def whitened_kernel_pca(
-    *, report = False, random_seed = None, metric = "f1_score", copy_X = False,
+    *, report = False, stream = sys.stdout, random_seed = None,
+    metric = "f1_score", copy_X = False,
     cv = 3, backend = "loky", n_jobs = 1, verbosity = 0
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
@@ -335,6 +338,9 @@ def whitened_kernel_pca(
 
     :param report: Whether or not to produce a report after fitting
     :type report: bool, optional
+    :param stream: Text file stream to print report to if ``report = True``.
+        Defaults to :class:`sys.stdout`.
+    :type stream: :class:`io.TextIOBase` subclass, optional
     :param random_seed: Global random seed for reproducible output
     :type random_seed: int, optional
     :param metric: Metric to pass to the :class:`ScoringKernelPCA` object. Must
@@ -437,16 +443,20 @@ def whitened_kernel_pca(
             # np.array on the tuple allows wrapping at 80 columns.
             if pca == pca_red:
                 print("selected columns (by univariate AUC):\n"
-                      f"{np.array(VTE_QIDA_INPUT_COLS)}\n")
+                      f"{np.array(VTE_QIDA_INPUT_COLS)}\n", file = stream)
             # print out estimator, cv folds, metric info
             print(f"estimator: {pca.estimator.__class__.__name__}\n"
-                  f"cv folds: {cv}\nmetric: {metric}\n")
+                  f"cv folds: {cv}\nmetric: {metric}\n", file = stream)
             # best kernel, CV results, normalized eigenvalues (clipped since too
             # many) + the number of components needs to explain 95% variance
-            print(f"best kernel: {pca.kernel}\n\ncv results:\n{cv_results}\n")
+            print(
+                f"best kernel: {pca.kernel}\n\ncv results:\n{cv_results}\n",
+                file = stream
+            )
             print(
                 f"best explained variance ratios:\n{pca.lambdas_ / trace}\n\n"
-                f"n_components needed to explain 95% variance: {n_comp_95}\n"
+                f"n_components needed to explain 95% variance: {n_comp_95}\n",
+                file = stream
             )
     # return PCA objects and (standardized) data so that they can be
     # appropriately persisted/passed to another analysis/model fitting method.

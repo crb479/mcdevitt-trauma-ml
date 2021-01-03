@@ -3,6 +3,7 @@ __doc__ = "Runs :func:`mtml.modeling.vte.decomposition.whitened_pca`."
 # pylint: disable=import-error
 from dask.distributed import Client, LocalCluster
 from dask_jobqueue import SLURMCluster
+import io
 import os
 import os.path
 import platform
@@ -46,11 +47,17 @@ if __name__ == "__main__":
         walltime = "00:00:10"
     )
     cluster.scale(jobs = 1)
-    #client = Client(LocalCluster(n_workers = 1))
-    # initialize client with SLURMCluster and receive task
+    # initalize StringIO to serve as in-memory buffer for the report since
+    # stdout will not be collected by the worker
+    stream = io.StringIO()
+    # initialize client with SLURMCluster and receive future
     client = Client(cluster)
-    _ = client.submit(task, report = True, random_seed = 7)
-    # get and print node-qualified PID + max RSS
+    fut = client.submit(task, report = True, stream = stream, random_seed = 7)
+    # once finished, print report from stream and get and print the
+    # # node-qualified PID + max RSS of this process (master)
+    while not fut.done():
+        pass
+    print(stream.getvalue())
     node, pid = platform.node(), os.getpid()
     max_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-    print(f"host:PID,max_rss = {node}:{pid},{max_rss}K")
+    print(f"master host:PID,max_rss = {node}:{pid},{max_rss}K")
