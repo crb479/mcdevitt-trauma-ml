@@ -23,17 +23,15 @@ def slow_sqrt(x, delay = 1):
 
     Delay used for simulating expensive computation.
 
-    :returns: Tuple of result and hostname-qualified PID of process executing
-        the function with max resident set size in K (hostname:PID,mem)
+    :returns: Tuple of result, hostname-qualified PID of process executing
+        the function, and max resident set size in K
     :rtype: tuple
     """
     time.sleep(delay)
     # return result, hostname-qualified PID of process executing function, and
     return (
-        math.sqrt(x), (
-            f"{platform.node()}:{os.getpid()},"
-            f"{resource.getrusage(resource.RUSAGE_SELF).ru_maxrss}K"
-        )
+        math.sqrt(x), f"{platform.node()}:{os.getpid()}",
+        resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     )
 
 
@@ -79,7 +77,7 @@ if __name__ == "__main__":
             # for faster IPC. local_directory is user's scratch directory
             cluster = SLURMCluster(
                 cores = 10,
-                memory = "400M",
+                memory = "500M",
                 processes = 10,
                 interface = "ib0",
                 local_directory = f"/scratch/{pwd.getpwuid(os.getuid())[0]}",
@@ -88,6 +86,8 @@ if __name__ == "__main__":
             )
             # only one job on one node
             cluster.scale(jobs = 1)
+            # print the job script that will be generated
+            print(cluster.job_script)
         # else set cluster to None
         else:
             cluster = None
@@ -98,7 +98,18 @@ if __name__ == "__main__":
         res = Parallel(verbose = args.verbose)(
             delayed(slow_sqrt)(x ** 2) for x in ar
         )
-    # collect PIDs + memory usage and save unique ones
-    pids = np.unique([pid for _, pid in res])
+    # collect PIDs + max RSS values
+    res_pairs = np.array([(pid, max_rss) for _, pid, max_rss in res])
+    # get unique PIDS and update max RSS values in dict if necessary
+    res_dict = {}
+    for pid, max_rss in res_pairs:
+        if pid not in res_dict:
+            res_dict[pid] = max_rss
+        else:
+            res_dict[pid] = max(res_dict[pid], max_rss)
+    # set res_pairs to pid, max_rss in K pairs
+    res_pairs = [f"{pid},{max_rss}K" for pid, max_rss in res_dict.values()]
+    # for each unique PID, get max max_rss (these can differ based on the time
+    # of reporting, so we need to take their max to get unique max_rss)
     # print unique PIDs
-    print(f"unique PIDs + max memory usage (K):\n{pids}")
+    print(f"unique PIDs + max memory usage (K):\n{res_pairs}")
