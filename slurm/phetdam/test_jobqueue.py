@@ -15,7 +15,6 @@ import math
 import numpy as np
 import os
 import platform
-import pwd
 import resource
 import time
 

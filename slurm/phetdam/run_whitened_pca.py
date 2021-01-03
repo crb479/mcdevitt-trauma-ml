@@ -2,6 +2,7 @@ __doc__ = "Runs :func:`mtml.modeling.vte.decomposition.whitened_pca`."
 
 # pylint: disable=import-error
 from dask.distributed import Client, LocalCluster
+from dask_jobqueue import SLURMCluster
 import os
 import os.path
 import platform
@@ -9,7 +10,7 @@ import resource
 
 # pylint: disable=import-error,relative-beyond-top-level
 from mtml.modeling.vte.decomposition import whitened_pca
-from mtml.utils.path import find_results_home_ascending
+from mtml.utils.path import find_results_home_ascending, get_scratch_dir
 from mtml.utils.persist import persist_json, persist_pickle
 
 # attempt to find the results top-level directory
@@ -35,8 +36,18 @@ if __name__ == "__main__":
             whitened_pca
         )
     )
-    # start local cluster with 1 worker and submit task to client
-    client = Client(LocalCluster(n_workers = 1))
+    # start Client using SLURMCluster with 1 worker and submit task to Client
+    client = Client(
+        SLURMCluster(
+            cores = 1,
+            memory = "200M",
+            processes = 1,
+            local_directory = get_scratch_dir(),
+            shebang = "#!/usr/bin/bash",
+            walltime = "00:00:10"
+        )
+    )
+    #client = Client(LocalCluster(n_workers = 1))
     _ = client.submit(task, report = True, random_seed = 7)
     # get and print node-qualified PID + max RSS
     node, pid = platform.node(), os.getpid()
