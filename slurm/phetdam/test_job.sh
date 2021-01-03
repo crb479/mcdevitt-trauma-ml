@@ -17,5 +17,6 @@ VERBOSITY=1
 # control number of forked processes and joblib verbosity. use dask backend
 source ~/djh458/bin/activate
 python3 ~/mcdevitt-trauma-ml/slurm/phetdam/test_job.py \
-    --backend=dask --njobs=$SLURM_CPUS_PER_TASK --verbose=$VERBOSITY
+    --backend=dask --njobs=$SLURM_CPUS_PER_TASK --jobqueue-cluster \
+    --verbose=$VERBOSITY
 deactivate

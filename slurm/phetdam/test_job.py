@@ -73,19 +73,21 @@ if __name__ == "__main__":
     print(f"parent PID: {platform.node()}:{os.getpid()}")
     # if backend == "dask"
     if args.backend == "dask":
-        # debug: check if getlogin works as expected (doesn't since batch file
-        # sent to non-login shell) so use pwd.getpwuid + os.getuid instead
-        print(pwd.getpwuid(os.getuid())[0])
         # if jobqueue_cluster is True, make SLURMCluster cluster
         if args.jobqueue_cluster:
             # single job, 10 processes, 10 cores (hardcoded). use infiniband
-            # for faster IPC. local_directory is my scratch directory 
+            # for faster IPC. local_directory is user's scratch directory
             cluster = SLURMCluster(
                 cores = 10,
                 memory = "400M",
                 processes = 10,
-                interface = "ib0"
+                interface = "ib0",
+                local_directory = f"/scratch/{pwd.getpwuid(os.getuid())[0]}",
+                shebang = "#!/usr/bin/bash",
+                walltime = "00:00:30"
             )
+            # only one job on one node
+            cluster.scale(jobs = 1)
         # else set cluster to None
         else:
             cluster = None
