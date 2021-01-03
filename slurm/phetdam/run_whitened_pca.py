@@ -1,6 +1,9 @@
 __doc__ = "Runs :func:`mtml.modeling.vte.decomposition.whitened_pca`."
 
+import os
 import os.path
+import platform
+import resource
 
 # pylint: disable=import-error,relative-beyond-top-level
 from mtml.modeling.vte.decomposition import whitened_pca
@@ -31,3 +34,7 @@ if __name__ == "__main__":
         )
     )
     _ = task(report = True, random_seed = 7)
+    # get and print node-qualified PID + max RSS
+    node, pid = platform.node(), os.getpid()
+    max_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    print(f"host:PID,max_rss = {node}:{pid},{max_rss}K")
