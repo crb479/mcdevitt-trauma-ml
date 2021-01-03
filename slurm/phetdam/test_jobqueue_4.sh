@@ -19,6 +19,6 @@ VERBOSITY=1
 # specified number of processes and cores given in test_jobqueue_4.json while
 # we pass --njobs=4 to spawn 4 dask workers
 source ~/djh458/bin/activate
-python3 ~/mcdevitt-trauma-ml/slurm/phetdam/test_job.py --njobs=4 \
+python3 ~/mcdevitt-trauma-ml/slurm/phetdam/test_jobqueue.py --njobs=4 \
     --jobqueue-config=./test_jobqueue_4.json --verbose=$VERBOSITY
 deactivate

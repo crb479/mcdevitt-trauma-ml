@@ -109,11 +109,11 @@ if __name__ == "__main__":
         res = Parallel(verbose = args.verbose)(
             delayed(slow_sqrt)(x ** 2) for x in ar
         )
-    # collect PIDs + max RSS values
-    res_pairs = np.array([(pid, max_rss) for _, pid, max_rss in res])
-    # get unique PIDS and update max RSS values in dict if necessary
+    # collect computed values
+    vals = np.array([val for val, _, _ in res])
+    # get unique PIDs and update max RSS values in dict if necessary
     res_dict = {}
-    for pid, max_rss in res_pairs:
+    for _, pid, max_rss in res:
         if pid not in res_dict:
             res_dict[pid] = max_rss
         else:
@@ -126,3 +126,5 @@ if __name__ == "__main__":
     print(f"unique PIDs + max memory usage (K):\n{res_pairs}\n")
     # number of processes spawned
     print(f"worker processes: {len(res_pairs)}")
+    # print computed qvalues
+    print(f"results:\n{vals}")

@@ -20,6 +20,6 @@ VERBOSITY=1
 # specified number of processes and cores given in test_jobqueue_1.json while
 # we pass --njobs=1 in order to spawn only a single dask worker.
 source ~/djh458/bin/activate
-python3 ~/mcdevitt-trauma-ml/slurm/phetdam/test_job.py --njobs=1 \
+python3 ~/mcdevitt-trauma-ml/slurm/phetdam/test_jobqueue.py --njobs=1 \
     --jobqueue-config=./test_jobqueue_1.json --verbose=$VERBOSITY
 deactivate
