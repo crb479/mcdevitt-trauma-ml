@@ -50,18 +50,22 @@ if __name__ == "__main__":
     # initalize StringIO to serve as in-memory buffer for the report since
     # stdout will not be collected by the worker
     stream = io.StringIO()
-    # initialize client with SLURMCluster and receive future
+    # initialize client with SLURMCluster
     client = Client(cluster)
-    def get_remote_inputs(f):
+    # decorator that returns args, kwargs and result of function call. this
+    # should later become the decorator mtml.utils.functools.return_eval_record
+    # that returns a EvaluationRecord (inherits from dict; can access keys with
+    # __getattr__ but cannot set anything in the dictionary).
+    def return_eval_record(f):
         
         def _inner(*args, **kwargs):
             res = f(*args, **kwargs)
-            return {"args": args, "kwargs": kwargs, "output": res}
+            return {"args": args, "kwargs": kwargs, "result": res}
 
         return _inner
-
+    # submit decorated task to client and receive future
     fut = client.submit(
-        get_remote_inputs(task), report = True, stream = stream,
+        return_eval_record(task), report = True, stream = io.StringIO(),
         random_seed = 7
     )
     # once finished, print report from stream and get and print the
