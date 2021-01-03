@@ -52,12 +52,23 @@ if __name__ == "__main__":
     stream = io.StringIO()
     # initialize client with SLURMCluster and receive future
     client = Client(cluster)
-    fut = client.submit(task, report = True, stream = stream, random_seed = 7)
+    def get_remote_inputs(f):
+        
+        def _inner(*args, **kwargs):
+            res = f(*args, **kwargs)
+            return {"args": args, "kwargs": kwargs, "output": res}
+
+        return _inner
+
+    fut = client.submit(
+        get_remote_inputs(task), report = True, stream = stream,
+        random_seed = 7
+    )
     # once finished, print report from stream and get and print the
     # # node-qualified PID + max RSS of this process (master)
     while not fut.done():
         pass
-    print(stream.getvalue())
+    print(fut.result()["kwargs"]["stream"].getvalue())
     node, pid = platform.node(), os.getpid()
     max_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     print(f"master host:PID,max_rss = {node}:{pid},{max_rss}K")
