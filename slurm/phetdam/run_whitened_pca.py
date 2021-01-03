@@ -1,5 +1,7 @@
 __doc__ = "Runs :func:`mtml.modeling.vte.decomposition.whitened_pca`."
 
+# pylint: disable=import-error
+from dask.distributed import Client, LocalCluster
 import os
 import os.path
 import platform
@@ -33,7 +35,9 @@ if __name__ == "__main__":
             whitened_pca
         )
     )
-    _ = task(report = True, random_seed = 7)
+    # start local cluster with 1 worker and submit task to client
+    client = Client(LocalCluster(n_workers = 1))
+    _ = client.submit(task, report = True, random_seed = 7)
     # get and print node-qualified PID + max RSS
     node, pid = platform.node(), os.getpid()
     max_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
