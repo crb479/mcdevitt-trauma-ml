@@ -1,0 +1,7 @@
+{
+    "cores": 10,
+    "memory": "800M",
+    "processes": 10,
+    "interface": "ib0",
+    "walltime": "00:00:30"
+}

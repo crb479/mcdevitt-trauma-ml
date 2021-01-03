@@ -9,3 +9,5 @@ mtml/tests/*.csv
 /na_pct_by_col.csv
 # ignore output files from slurm/other programs
 **/*.out
+# ignore .vscode settings directory
+**/.vscode
