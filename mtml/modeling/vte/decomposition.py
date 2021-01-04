@@ -473,7 +473,7 @@ def whitened_kernel_pca(
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
         ), 
-        kernels, cv = cv, n_jobs = n_local_jobs, verbose = **verbosity_
+        kernels, cv = cv, n_jobs = n_local_jobs, **verbosity_
     )
     pca_red_gscv = grid_search_cls(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
@@ -482,7 +482,7 @@ def whitened_kernel_pca(
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
         ),
-        kernels, cv = cv, n_jobs = n_local_jobs, verbose = **verbosity_
+        kernels, cv = cv, n_jobs = n_local_jobs, **verbosity_
     )
     # fit on the (pre-standardized) training data. use y_train in order for
     # the score method of the ScoringKernelPCA to work correctly.
