@@ -25,12 +25,12 @@ if __name__ == "__main__":
     # persistence decorator args
     persist_json_args = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_pca_params.json",
-        out_transform = lambda x: (x.result["pcas"][0].get_params(),
-                                   x.result["pcas"][1].get_params())
+        out_transform = lambda x: (x["pcas"][0].get_params(),
+                                   x["pcas"][1].get_params())
     )
     persist_pickle_args = dict(
         target = VTE_RESULTS_DIR + "/vte_whitened_pcas.pickle",
-        out_transform = lambda x: x.result["pcas"]
+        out_transform = lambda x: x["pcas"]
     )
     # add persistence decorators and run
     task = persist_json(**persist_json_args)(

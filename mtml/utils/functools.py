@@ -1,7 +1,5 @@
 __doc__ = "Helper code for use with functions."
 
-from functools import wraps
-
 
 class EvaluationRecord(dict):
     """Non-mutable :class:`dict` subclass.
@@ -34,7 +32,7 @@ def return_eval_record(f):
 
     :rtype: function
     """
-    @wraps(f)
+
     def _inner(*args, **kwargs):
         res = f(*args, **kwargs)
         return EvaluationRecord(args = args, kwargs = kwargs, result = res)
