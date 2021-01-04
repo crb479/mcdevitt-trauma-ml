@@ -181,7 +181,7 @@ compute nodes.
 
 Below is an example of computing square roots in a distributed fashion using
 the `joblib.parallel.parallel_backend`__ context manager to pass control to the
-``distributed`` ``Client``, which uses the clsuter started by the
+``distributed`` ``Client``, which uses the cluster started by the
 ``dask_jobqueue`` ``SLURMCluster``.
 
 .. code::  python3
