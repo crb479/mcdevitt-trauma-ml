@@ -158,8 +158,8 @@ script will invoke the script with the Python interpreter.
    with open(RESULTS_HOME + "/phetdam/np_log_vals.json", "w") as f:
       json.dump(vals, f)
 
-Distributing computation with ``dask_jobqueue`` and ``joblib``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Distributing computation with ``dask_jobqueue``, ``dask_ml``, and ``joblib``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `dask_jobqueue`__ package greatly simplifies the task of distributing
 computations. It is part of the dependencies listeed in the ``setup.cfg`` file
@@ -170,8 +170,8 @@ top-level repository directory. ``dask_jobqueue`` offers subclasses of the
 your user code, the ``distributed`` scheduler, and NYU HPC's Slurm resource
 manager.
 
-Although typical usage is to initialize a `distributed.client.Client`__ and then
-use its ``map`` and ``submit`` methods to send tasks to be scheduled, it's also
+Typical usage is to initialize a `distributed.client.Client`__ and then use its
+``map`` and ``submit`` methods to send tasks to be scheduled. However, it's
 possible to use the ``distributed`` scheduler with ``joblib``, which is what
 typically backs scikit-learn estimators that accept the ``n_jobs`` parameter.
 The ``distributed`` scheduler and ``Client`` can also be used with the
@@ -213,20 +213,27 @@ the `joblib.parallel.parallel_backend`__ context manager to pass control to the
        )
 
 The ``parallel_backend`` context manager can also be used to change the backend
-used by ``joblib`` internally withing scikit-learn code. Below we show an
-example of using the `sklearn.model_selection._search.GridSearchCV`__ estimator
-together with the kernel SVM model on a hyperparameter grid, with computation
-done in a distributed fashion using the ``SLURMCluster``, ``Client``, and
-``parallel_backend`` context manager [#]_.
+used by ``joblib`` internally within scikit-learn code. However, in the author's
+own experience using `sklearn.model_selection._search.GridSearchCV`__ with the
+``parallel_backend`` context manager on Greene, communication problems between
+workers are quite frequent which make computations crash. It's a better idea to
+use the `dask_ml`__ drop-in replacement
+`dask_ml.modeL_selection._search.GridSearchCV`__ estimator, which works more
+smoothly with the ``distributed`` scheduler and client.
+
+Below we show an example of using the ``dask_ml`` ``GridSearchCV`` together with
+the kernel SVM model on a hyperparameter grid, with computation done in a
+distributed fashion using the ``SLURMCluster`` and ``Client`` [#]_.
 
 .. code:: python3
 
    from dask.distributed import Client
    from dask_jobqueue import SLURMCluster
+   from dask_ml.model_selection impory GridSearchCV
    from joblib import parallel_backend
    from sklearn.datasets import load_digits
    from sklearn.svm import SVC
-   from sklearn.model_selection import GridSearchCV, train_test_split
+   from sklearn.model_selection import train_test_split
    from sklearn.preprocessing import StandardScaler
 
    # initialize SLURMCluster
@@ -252,11 +259,15 @@ done in a distributed fashion using the ``SLURMCluster``, ``Client``, and
        kernel = ["linear", "rbf", "poly"],
        random_state = [7]
    )
-   # initialize GridSearchCV
-   search = GridSearchCV(SVC(), grid, scoring = "f1", cv = 5, verbose = 1)
-   # use distributed backend with cluster started by SLURMCluster
-   with parallel_backend("dask"):
-       search.fit(X_train, y_train)
+   # initialize dask_ml GridSearchCV. unlike scikit-learn GridSearchCV, dask_ml
+   # dask_ml GridSearchCV does not take the verbose kwarg in its constructor
+   # but does accept scheduler and cache_cv kwargs.
+   search = GridSearchCV(
+       SVC(), grid, scoring = "f1", cv = 5,
+       return_train_score = False, scheduler = client
+   )
+   # uses distributed backend with cluster started by SLURMCluster
+   search.fit(X_train, y_train)
 
 .. [#] Warning: this code is for illustrative purposes only and has not been
    tested on Greene.
@@ -275,6 +286,11 @@ done in a distributed fashion using the ``SLURMCluster``, ``Client``, and
 
 .. __: https://scikit-learn.org/stable/modules/generated/sklearn.
    model_selection.GridSearchCV.html
+
+.. __: https://ml.dask.org/modules/api.html
+
+.. __: https://ml.dask.org/modules/generated/dask_ml.model_selection.
+   GridSearchCV.html#dask_ml.model_selection.GridSearchCV
 
 Configuring ``dask`` and ``dask_jobqueue``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
