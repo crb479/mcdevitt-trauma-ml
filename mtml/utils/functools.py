@@ -2,10 +2,11 @@ __doc__ = "Helper code for use with functions."
 
 
 class EvaluationRecord(dict):
-    """Non-mutable :class:`dict` subclass.
+    """:class:`dict` subclass.
 
     Returned by :func:`return_eval_record` instead of the actual return value of
-    the decorated function.
+    the decorated function. Was originally supposed to be "immutable" but this
+    caused problems with serialization so that was dropped.
     """
     def __getattr__(self, key):
         # if not in keys, then return object.__getattr__
@@ -18,12 +19,6 @@ class EvaluationRecord(dict):
         except AttributeError:
             pass
         return object.__getattribute__(self, key)
-    
-    def __setattr__(self, key, value):
-        raise NotImplementedError("cannot set attributes")
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError("cannot set item")
 
     def __repr__(self):
         item_str = ", ".join([f"{k}={v}" for k, v in self.items()])
