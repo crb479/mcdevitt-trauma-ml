@@ -1,4 +1,5 @@
 jobqueue:
   slurm:
-    interface: "ib0"                  # always use infiniband for IPC
-    shebang: "#!/usr/bin/bash"        # use bash for script running
+    interface: "ib0"              # always use infiniband for IPC
+    shebang: "#!/usr/bin/bash"    # use bash for script running
+    memory: "2G"                  # NYU HPC default allocation for one process
