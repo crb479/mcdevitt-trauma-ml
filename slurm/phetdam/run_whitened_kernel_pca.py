@@ -119,6 +119,6 @@ if __name__ == "__main__":
     # run task using the initialized cluster
     _ = task(
         report = True, random_seed = 7, metric = args.metric,
-        cv = args.cv_folds, backend = backend, cluster = cluster,
+        cv = args.cv_folds, backend = args.backend, cluster = cluster,
         n_jobs = args.njobs, verbosity = args.verbose
     )
