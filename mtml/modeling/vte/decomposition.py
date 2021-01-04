@@ -368,7 +368,10 @@ def whitened_kernel_pca(
     :param mmap_dir: Directory where input data will be dumped to disk and then
         accessed as a :class:`numpy.memmap`.
     :type mmap_dir: str, optional
-    :param verbosity: Level of verbosity of the GridSearchCV
+    :param verbosity: Level of verbosity of the GridSearchCV. Has no effect
+        when ``backend = "dask"` since
+        :class:`dask_ml.model_selection.GridSearchCV` does not accept the
+        ``verbose`` kwarg in its constructor.
     :type verbosity: int, optional
     :rtype: dict
     """
@@ -456,6 +459,8 @@ def whitened_kernel_pca(
         grid_search_cls = GridSearchCV
     # number of local jobs (processes). -1 if using dask, n_jobs otherwise
     n_local_jobs = -1 if backend == "dask" else n_jobs
+    # dask_ml GridSearchCV does not accept verbose kwarg in constructor
+    verbosity_ = {} if backend == "dask" else {"verbose": verbosity}
     # for both X_train and X_train_red, grid search across the kernels to find
     # the best kernel cross-validated on the training data. again use F1-score,
     # which is done internally in the ScoringKernelPCA. whitening is again
@@ -468,7 +473,7 @@ def whitened_kernel_pca(
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
         ), 
-        kernels, cv = cv, n_jobs = n_local_jobs, verbose = verbosity
+        kernels, cv = cv, n_jobs = n_local_jobs, verbose = **verbosity_
     )
     pca_red_gscv = grid_search_cls(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
@@ -477,7 +482,7 @@ def whitened_kernel_pca(
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
         ),
-        kernels, cv = cv, n_jobs = n_local_jobs, verbose = verbosity
+        kernels, cv = cv, n_jobs = n_local_jobs, verbose = **verbosity_
     )
     # fit on the (pre-standardized) training data. use y_train in order for
     # the score method of the ScoringKernelPCA to work correctly.
