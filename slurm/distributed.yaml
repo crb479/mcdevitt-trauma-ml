@@ -1,7 +1,7 @@
 distributed:
   worker:
     memory:
-      target: 0.93       # high target
-      spill: False       # no spilling to disk allowed
+      target: false      # set target and spill to false to disable spilling
+      spill: false
       pause: 0.9
       terminate: 0.95
