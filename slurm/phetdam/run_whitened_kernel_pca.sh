@@ -8,8 +8,8 @@
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=100M
-#SBATCH --time=00:20:00
+#SBATCH --mem=1G
+#SBATCH --time=00:45:00
 
 # metric, cv fold count (cores/task should equal this * 4). note that we pass
 # the cores/task (exported by default as SLURM_CPUS_PER_TASK) to n_jobs so we
@@ -24,5 +24,6 @@ VERBOSITY=1
 source ~/djh458/bin/activate
 python3 ~/mcdevitt-trauma-ml/slurm/phetdam/run_whitened_kernel_pca.py \
     --metric=$METRIC --cv-folds=$CV_FOLDS --njobs=$CV_FOLDS \
-    --jobqueue-config=./run_whitened_kernel_pca.json --verbose=$VERBOSITY
+    --jobqueue-config=./run_whitened_kernel_pca.json \
+    --mmap-dir=./scratch/djh458 --verbose=$VERBOSITY
 deactivate

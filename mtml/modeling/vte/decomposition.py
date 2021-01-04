@@ -7,8 +7,10 @@ For example, principal components analysis (eigendecomposition/SVD).
 
 # pylint: disable=import-error
 from dask.distributed import Client, LocalCluster
+import dask_ml.model_selection
 from functools import partial
-from joblib import parallel_backend
+import gc
+import joblib
 import matplotlib.cm
 import matplotlib.pyplot as plt
 import math
@@ -308,8 +310,8 @@ class ScoringKernelPCA(KernelPCA):
 
 def whitened_kernel_pca(
     *, report = False, stream = sys.stdout, random_seed = None,
-    metric = "f1_score", copy_X = False,
-    cv = 3, backend = "loky", cluster = None, n_jobs = 1, verbosity = 0
+    metric = "f1_score", copy_X = False, cv = 3, backend = "loky",
+    cluster = None, n_jobs = 1, mmap_dir = None, verbosity = 0
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
 
@@ -363,10 +365,25 @@ def whitened_kernel_pca(
         ``None`` and when ``backend = "dask"``, the number of worker jobs that
         ``cluster.scale`` should start.
     :type n_jobs: int, optional
+    :param mmap_dir: Directory where input data will be dumped to disk and then
+        accessed as a :class:`numpy.memmap`.
+    :type mmap_dir: str, optional
     :param verbosity: Level of verbosity of the GridSearchCV
     :type verbosity: int, optional
     :rtype: dict
     """
+    # if backend == "dask"
+    if backend == "dask":
+        # if cluster is None, start Client with LocalCluster, n_jobs workers
+        # pylint: disable=unused-variable
+        if cluster is None:
+            client = Client(LocalCluster(n_workers = n_jobs))
+        # else call cluster.scale and pass cluster straight into Client
+        else:
+            # start jobs n_jobs workers (may have multiple threads, processes)
+            cluster.scale(jobs = n_jobs)
+            client = Client(cluster)
+        # pylint: enable=unused-variable
     # get data set of continuous features from vte_slp_factory
     X_train, X_test, y_train, y_test = vte_slp_factory(
         data_transform = replace_hdl_tot_chol_with_ratio,
@@ -390,51 +407,80 @@ def whitened_kernel_pca(
     X_train_red, X_test_red = (
         scaler_red.transform(X_train_red), scaler_red.transform(X_test_red)
     )
+    # if mmap_dir is not None, then memory-map the inputs and outputs. dump and
+    # reload everything so the forked processes have a smaller size
+    if mmap_dir is not None:
+        # joblib.dump returns the names of the files the data is pickled to
+        X_train_loc = joblib.dump(
+            X_train, mmap_dir + "/whitened_kernel_pca__X_train.pickle"
+        )
+        X_train = joblib.load(X_train_loc, mmap_mode = "r")
+        X_test_loc = joblib.dump(
+            X_test, mmap_dir + "/whitened_kernel_pca__X_test.pickle"
+        )
+        X_test = joblib.load(X_test_loc, mmap_mode = "r")
+        X_train_red_loc = joblib.dump(
+            X_train_red, mmap_dir + "/whitened_kernel_pca__X_train_red.pickle"
+        )
+        X_train_red = joblib.load(X_train_red_loc, mmap_mode = "r")
+        X_test_red_loc = joblib.dump(
+            X_test_red, mmap_dir + "/whitened_kernel_pca__X_test_red.pickle"
+        )
+        X_test_red = joblib.load(X_test_red_loc, mmap_mode = "r")
+        y_train_loc = joblib.dump(
+            y_train, mmap_dir + "/whitened_kernel_pca__y_train.pickle"
+        )
+        y_train = joblib.load(y_train_loc, mmap_mode = "r")
+        y_test_loc = joblib.dump(
+            y_test, mmap_dir + "/whitened_kernel_pca__y_test.pickle"
+        )
+        y_test = joblib.load(y_test_loc, mmap_mode = "r")
+        # collect garbage
+        gc.collect()
     # list of kernels to cycle through. note that "laplacian" is not shown as a
     # choice in the documentation, but internally, kernel computation is done
     # using sklearn.metrics.pairwise.pairwise_kernels, which does accept it.
     kernels = dict(kernel = ["linear", "poly", "rbf", "laplacian"])
+    # use the dask_ml version of GridSearchCV with client as scheduler if
+    # backend = "dask" (don't return training scores)
+    if backend == "dask":
+        # set dask_ml GridSearchCV scheduler to client and don't use train score
+        grid_search_cls = partial(
+            dask_ml.model_selection.GridSearchCV, scheduler = client,
+            return_train_score = False
+        )
+    # else use normal GridSearchCV
+    else:
+        grid_search_cls = GridSearchCV
+    # number of local jobs (processes). -1 if using dask, n_jobs otherwise
+    n_local_jobs = -1 if backend == "dask" else n_jobs
     # for both X_train and X_train_red, grid search across the kernels to find
     # the best kernel cross-validated on the training data. again use F1-score,
     # which is done internally in the ScoringKernelPCA. whitening is again
-    # applied to be friendly for scaling-sensitive models.
-    # note: no n_jobs so that parallel_backend context manager can be used
-    pca_full_gscv = GridSearchCV(
+    # applied to be friendly for scaling-sensitive models. use n_jobs = -1 if
+    # backend is dask, else just pass n_jobs in
+    pca_full_gscv = grid_search_cls(
         ScoringKernelPCA( # kernel PCA for full continuous columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
-        ), kernels, cv = cv, verbose = verbosity
+        ), 
+        kernels, cv = cv, n_jobs = n_local_jobs, verbose = verbosity
     )
-    pca_red_gscv = GridSearchCV(
+    pca_red_gscv = grid_search_cls(
         ScoringKernelPCA( # kernel PCA for 7 highest AUC columns
             estimator = LogisticRegression(random_state = random_seed,
                                            class_weight = "balanced"),
             metric = metric, whiten = True, random_state = random_seed,
             copy_X = copy_X
-        ), kernels, cv = cv, verbose = verbosity
+        ),
+        kernels, cv = cv, n_jobs = n_local_jobs, verbose = verbosity
     )
-    # if backend == "dask"
-    if backend == "dask":
-        # if cluster is None, start Client with LocalCluster, n_jobs workers
-        # pylint: disable=unused-variable
-        if cluster is None:
-            client = Client(LocalCluster(n_workers = n_jobs))
-        # else call cluster.scale and pass cluster straight into Client
-        else:
-            # start jobs n_jobs workers (may have multiple threads, processes)
-            cluster.scale(jobs = n_jobs)
-            client = Client(cluster)
-        # pylint: enable=unused-variable
-    # use parallel_backend context manager to alter GridSearchCV backend
-    with parallel_backend(
-        backend, n_jobs = -1 if cluster is not None else n_jobs
-    ):
-        # fit on the (pre-standardized) training data. use y_train in order for
-        # the score method of the ScoringKernelPCA to work correctly.
-        pca_full_gscv.fit(X_train, y_train)
-        pca_red_gscv.fit(X_train_red, y_train)
+    # fit on the (pre-standardized) training data. use y_train in order for
+    # the score method of the ScoringKernelPCA to work correctly.
+    pca_full_gscv.fit(X_train, y_train)
+    pca_red_gscv.fit(X_train_red, y_train)
     # best ScoringKernelPCA for each grid search across kernels
     pca_full = pca_full_gscv.best_estimator_
     pca_red = pca_red_gscv.best_estimator_
@@ -482,6 +528,16 @@ def whitened_kernel_pca(
                 f"n_components needed to explain 95% variance: {n_comp_95}\n",
                 file = stream
             )
+    # if mmap_dir is not None, load dense arrays from pickles
+    if mmap_dir is not None:
+        X_train = joblib.load(X_train_loc)
+        X_test = joblib.load(X_test_loc)
+        X_train_red = joblib.load(X_train_red_loc)
+        X_test_red = joblib.load(X_test_red_loc)
+        y_train = joblib.load(y_train_loc)
+        y_test = joblib.load(y_test_loc)
+        # hopefully clean up garbage
+        gc.collect()
     # return PCA objects and (standardized) data so that they can be
     # appropriately persisted/passed to another analysis/model fitting method.
     # CV results are also included as an extra bonus.

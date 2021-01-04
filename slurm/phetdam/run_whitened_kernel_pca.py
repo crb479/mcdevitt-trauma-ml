@@ -52,6 +52,11 @@ if __name__ == "__main__":
                 "and local_directory args, which are hardcoded.")
     )
     arp.add_argument(
+        "-m", "--mmap-dir",
+        help = ("Directory to dump numpy arrays to for reading using memory "
+                "mapping by joblib.load. if not provided, arrays are in-memory")
+    )
+    arp.add_argument(
         "-n", "--njobs", default = 1, type = int,
         help = ("Number of processes for joblib to use during multiprocessing "
                 "if --jobqueue-config is not passed a JSON config file. if "
@@ -120,5 +125,5 @@ if __name__ == "__main__":
     _ = task(
         report = True, random_seed = 7, metric = args.metric,
         cv = args.cv_folds, backend = args.backend, cluster = cluster,
-        n_jobs = args.njobs, verbosity = args.verbose
+        n_jobs = args.njobs, mmap_dir = args.mmap_dir, verbosity = args.verbose
     )
