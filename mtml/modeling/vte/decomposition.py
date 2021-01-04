@@ -410,30 +410,32 @@ def whitened_kernel_pca(
     # if mmap_dir is not None, then memory-map the inputs and outputs. dump and
     # reload everything so the forked processes have a smaller size
     if mmap_dir is not None:
-        # joblib.dump returns the names of the files the data is pickled to
+        # joblib.dump returns the names of the files the data is pickled to in
+        # a list so we have to index the names. since we are pickling one array
+        # at a time, there will be only one filename in each list.
         X_train_loc = joblib.dump(
             X_train, mmap_dir + "/whitened_kernel_pca__X_train.pickle"
-        )
+        )[0]
         X_train = joblib.load(X_train_loc, mmap_mode = "r")
         X_test_loc = joblib.dump(
             X_test, mmap_dir + "/whitened_kernel_pca__X_test.pickle"
-        )
+        )[0]
         X_test = joblib.load(X_test_loc, mmap_mode = "r")
         X_train_red_loc = joblib.dump(
             X_train_red, mmap_dir + "/whitened_kernel_pca__X_train_red.pickle"
-        )
+        )[0]
         X_train_red = joblib.load(X_train_red_loc, mmap_mode = "r")
         X_test_red_loc = joblib.dump(
             X_test_red, mmap_dir + "/whitened_kernel_pca__X_test_red.pickle"
-        )
+        )[0]
         X_test_red = joblib.load(X_test_red_loc, mmap_mode = "r")
         y_train_loc = joblib.dump(
             y_train, mmap_dir + "/whitened_kernel_pca__y_train.pickle"
-        )
+        )[0]
         y_train = joblib.load(y_train_loc, mmap_mode = "r")
         y_test_loc = joblib.dump(
             y_test, mmap_dir + "/whitened_kernel_pca__y_test.pickle"
-        )
+        )[0]
         y_test = joblib.load(y_test_loc, mmap_mode = "r")
         # collect garbage
         gc.collect()

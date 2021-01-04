@@ -23,7 +23,7 @@ VERBOSITY=1
 # specify metric, number of CV folds, and number of processes to spawn
 source ~/djh458/bin/activate
 python3 ~/mcdevitt-trauma-ml/slurm/phetdam/run_whitened_kernel_pca.py \
-    --metric=$METRIC --cv-folds=$CV_FOLDS --njobs=$CV_FOLDS \
+    --metric=$METRIC --cv-folds=$CV_FOLDS --njobs=1 \
     --jobqueue-config=./run_whitened_kernel_pca.json \
-    --mmap-dir=./scratch/djh458 --verbose=$VERBOSITY
+    --mmap-dir=/scratch/djh458 --verbose=$VERBOSITY
 deactivate
