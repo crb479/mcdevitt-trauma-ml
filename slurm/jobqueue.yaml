@@ -1,0 +1,4 @@
+jobqueue:
+  slurm:
+    interface: "ib0"                  # always use infiniband for IPC
+    shebang: "#!/usr/bin/bash"        # use bash for script running

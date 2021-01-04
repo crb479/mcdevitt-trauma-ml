@@ -3,6 +3,10 @@
 Slurm batch scripts for NYU HPC
 ===============================
 
+   Important:
+
+   Read this file in its entirety!
+
 On NYU HPC clusters, one may only access the computing resources there by
 submitting jobs to `Slurm`__ through ``sbatch`` or ``srun`` [#]_. Please place
 any ``bash`` scripts to be submitted to Slurm along with supporting code here in
@@ -153,3 +157,136 @@ script will invoke the script with the Python interpreter.
    # dump in ../results/phetdam/np_log_vals.json
    with open(RESULTS_HOME + "/phetdam/np_log_vals.json", "w") as f:
       json.dump(vals, f)
+
+Distributing computation with ``dask_jobqueue`` and ``joblib``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The `dask_jobqueue`__ package greatly simplifies the task of distributing
+computations. It is part of the dependencies listeed in the ``setup.cfg`` file
+so it should be automatically installed when ``pip3 install .`` is run in the
+top-level repository directory. ``dask_jobqueue`` offers subclasses of the
+`distributed.deploy.spec.SpecCluster`__, specifically the
+`dask.jobqueue.slurm.SLURMCluster`__, that facilitates the interaction between
+your user code, the ``distributed`` scheduler, and NYU HPC's Slurm resource
+manager.
+
+Although typical usage is to initialize a `distributed.client.Client`__ and then
+use its ``map`` and ``submit`` methods to send tasks to be scheduled, it's also
+possible to use the ``distributed`` scheduler with ``joblib``, which is what
+typically backs scikit-learn estimators that accept the ``n_jobs`` parameter.
+The ``distributed`` scheduler and ``Client`` can also be used with the
+``SLURMCluster`` offered by ``dask_jobqueue`` and together these tools make it
+easier to multiprocess on a single node or distribute computation across several
+compute nodes.
+
+Below is an example of computing square roots in a distributed fashion using
+the `joblib.parallel.parallel_backend`__ context manager to pass control to the
+``distributed`` ``Client``, which uses the clsuter started by the
+``dask_jobqueue`` ``SLURMCluster``.
+
+.. code::  python3
+
+   from dask.distributed import Client
+   from dask_jobqueue import SLURMCluster
+   from joblib import delayed, parallel_backend, Parallel
+   import math
+
+   # initialize SLURMCluster
+   cluster = SLURMCluster(
+       local_directory = "/scratch/djh458", # replace with your own scratch dir
+       shebang = "#!/usr/bin/bash",
+       cores = 3,                           # each worker gets 3 CPU cores
+       memory = "300M",                     # each worker gets 300M total memory
+       processes = 3,                       # each worker starts 3 processes
+       interface = "ib0",                   # infiniband gives faster IPC
+       walltime = "00:00:30"                # worker walltime before death
+   )
+   # start 4 workers (submits 4 dask-worker jobs to Slurm)
+   cluster.scale(jobs = 4)
+   # connect to distributed Client
+   client = Client(cluster)
+   # use context manager with "dask" argument to use distributed backend
+   with parallel_backend("dask"):
+       # typical joblib mapping using generator expression, Parallel, delayed
+       res = Parallel(verbose = 1)(
+           delayed(math.sqrt)(x) for x in [i for i in range(1000)]
+       )
+
+The ``parallel_backend`` context manager can also be used to change the backend
+used by ``joblib`` internally withing scikit-learn code. Below we show an
+example of using the `sklearn.model_selection._search.GridSearchCV`__ estimator
+together with the kernel SVM model on a hyperparameter grid, with computation
+done in a distributed fashion using the ``SLURMCluster``, ``Client``, and
+``parallel_backend`` context manager [#]_.
+
+.. code:: python3
+
+   from dask.distributed import Client
+   from dask_jobqueue import SLURMCluster
+   from joblib import parallel_backend
+   from sklearn.datasets import load_digits
+   from sklearn.svm import SVC
+   from sklearn.model_selection import GridSearchCV, train_test_split
+   from sklearn.preprocessing import StandardScaler
+
+   # initialize SLURMCluster
+   cluster = SLURMCluster(
+       local_directory = "/scratch/djh458",
+       shebang = "#!/usr/bin/bash",
+       cores = 4,
+       memory = "10G",
+       processes = 4,
+       interface = "ib0",
+       walltime = "00:45:00"
+   )
+   # start 6 workers + connect to distributed Client
+   cluster.scale(jobs = 6)
+   client = Client(cluster)
+   # get digits data and standardize (all features are 0-16 so not necessary)
+   X, y = load_digits(return_X_y = True)
+   X = StandardScaler().fit_transform(X)
+   # train, test split and grid of parameters
+   X_train, X_test, y_train, y_test = train_test_split(X, y, random_state = 7)
+   grid = dict(
+       C = [0.05, 0.1, 1, 5],
+       kernel = ["linear", "rbf", "poly"],
+       random_state = [7]
+   )
+   # initialize GridSearchCV
+   search = GridSearchCV(SVC(), grid, scoring = "f1", cv = 5, verbose = 1)
+   # use distributed backend with cluster started by SLURMCluster
+   with parallel_backend("dask"):
+       search.fit(X_train, y_train)
+
+.. [#] Warning: this code is for illustrative purposes only and has not been
+   tested on Greene.
+
+.. __: https://jobqueue.dask.org/en/latest/
+
+.. __: https://distributed.dask.org/en/latest/api.html#distributed.SpecCluster
+
+.. __: https://jobqueue.dask.org/en/latest/generated/dask_jobqueue.SLURMCluster.
+   html#dask_jobqueue.SLURMCluster
+
+.. __: https://distributed.dask.org/en/latest/api.html#distributed.Client
+
+.. __: https://joblib.readthedocs.io/en/latest/parallel.html#joblib.
+   parallel_backend
+
+.. __: https://scikit-learn.org/stable/modules/generated/sklearn.
+   model_selection.GridSearchCV.html
+
+Configuring ``dask`` and ``dask_jobqueue``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to modify the default ``distributed`` scheduler behavior with
+YAML configuration files. This is useful for modifying the default
+`worker memory management behavior`__ for ``distributed`` or for overriding
+default parameters for the special cluster classes in ``dask_jobqueue``. It is
+preferable for configuration files to be located at ``~/.config/dask``. This
+directory also contains two sample YAML configurations, ``jobqueue.yaml`` for
+``dask_jobqueue`` and ``distributed.yaml`` for ``distributed``, which modify the
+default worker memory management policies and override defaults for a couple of
+named parameters to pass to the ``SLURMCluster``.\
+
+.. __: https://distributed.dask.org/en/latest/worker.html
