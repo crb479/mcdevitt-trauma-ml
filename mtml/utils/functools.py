@@ -8,7 +8,10 @@ class EvaluationRecord(dict):
     the decorated function.
     """
     def __getattr__(self, key):
-        return self[key]
+        # if not in keys, then return object.__getattr__
+        if key in self.keys():
+            return self[key]
+        return getattr(self, key)
     
     def __setattr__(self, key, value):
         raise NotImplementedError("cannot set attributes")
