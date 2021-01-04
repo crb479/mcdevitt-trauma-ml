@@ -6,6 +6,7 @@ For example, principal components analysis (eigendecomposition/SVD).
 """
 
 # pylint: disable=import-error
+from dask.distributed import Client, LocalCluster
 from functools import partial
 from joblib import parallel_backend
 import matplotlib.cm
@@ -308,7 +309,7 @@ class ScoringKernelPCA(KernelPCA):
 def whitened_kernel_pca(
     *, report = False, stream = sys.stdout, random_seed = None,
     metric = "f1_score", copy_X = False,
-    cv = 3, backend = "loky", n_jobs = 1, verbosity = 0
+    cv = 3, backend = "loky", cluster = None, n_jobs = 1, verbosity = 0
 ):
     """Analysis method that performs whitened kernel PCA on the VTE data set.
 
@@ -329,7 +330,7 @@ def whitened_kernel_pca(
     GridSearchCV to perform grid search and pick the kernel parameters that give
     the highest score. The number of CV splits does not need to be high. Note
     that the runtime for this function is quite long since each fit takes about
-    a minute or two and becuase there are ``10 * cv`` fits being done.
+    a minute or two and because there are ``10 * cv`` fits being done.
 
     A report may optionally be printed which shows the explained variance ratios
     and if ``plotting_dir`` is not ``None``, then plots of the explained
@@ -349,10 +350,18 @@ def whitened_kernel_pca(
     :param cv: Number of cross-validation folds to fit kernel PCAs on.
     :type cv: int, optional
     :param backend: Name of backend to use for multiprocessing. Defaults to
-        ``"loky"``. Use ``"dask"`` in conjunction with 
+        ``"loky"``. Set to ``"dask"`` in order to use the ``cluster`` argument.
     :type backend: str, optional
+    :param cluster: :class:`distributed.deploy.spec.SpecCluster` subclass
+        instance that represents a [distributed] cluster. Unless
+        ``backend = "dask"``, ``cluster`` will be ignored. The ``scale`` method
+        of ``cluster`` will be invoked in this function.
+    :type cluster: :class:`distributed.deploy.spec.SpecCluster` subclass
+        instance, optional
     :param n_jobs: Number of processes for ``joblib`` to use for parallel
-        multiprocessing execution of grid search.
+        multiprocessing execution of grid search, or when ``cluster`` is not
+        ``None`` and when ``backend = "dask"``, the number of worker jobs that
+        ``cluster.scale`` should start.
     :type n_jobs: int, optional
     :param verbosity: Level of verbosity of the GridSearchCV
     :type verbosity: int, optional
@@ -406,15 +415,30 @@ def whitened_kernel_pca(
             copy_X = copy_X
         ), kernels, cv = cv, verbose = verbosity
     )
-    # fit on the (pre-standardized) training data. use y_train in order for the
-    # score method of the ScoringKernelPCA to work correctly.
-    with parallel_backend(backend, n_jobs = n_jobs):
+    # if backend == "dask"
+    if backend == "dask":
+        # if cluster is None, start Client with LocalCluster, n_jobs workers
+        # pylint: disable=unused-variable
+        if cluster is None:
+            client = Client(LocalCluster(n_workers = n_jobs))
+        # else call cluster.scale and pass cluster straight into Client
+        else:
+            # start jobs n_jobs workers (may have multiple threads, processes)
+            cluster.scale(jobs = n_jobs)
+            client = Client(cluster)
+        # pylint: enable=unused-variable
+    # use parallel_backend context manager to alter GridSearchCV backend
+    with parallel_backend(
+        backend, n_jobs = -1 if cluster is not None else n_jobs
+    ):
+        # fit on the (pre-standardized) training data. use y_train in order for
+        # the score method of the ScoringKernelPCA to work correctly.
         pca_full_gscv.fit(X_train, y_train)
         pca_red_gscv.fit(X_train_red, y_train)
     # best ScoringKernelPCA for each grid search across kernels
     pca_full = pca_full_gscv.best_estimator_
     pca_red = pca_red_gscv.best_estimator_
-    # compute traces for full and reduced best-fittig kernel PCAs
+    # compute traces for full and reduced best-fitting kernel PCAs
     trace_full = pca_full.lambdas_.sum()
     trace_red = pca_red.lambdas_.sum()
     # n_components needed to explain 95% variance for full and reduced data
