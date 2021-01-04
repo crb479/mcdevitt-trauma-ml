@@ -11,7 +11,13 @@ class EvaluationRecord(dict):
         # if not in keys, then return object.__getattr__
         if key in self.keys():
             return self[key]
-        return getattr(self, key)
+        # object doesn't have __getattr__ as defined in docs but has
+        # __getattribute__ interestingly enough
+        try:
+            return object.__getattr__(self, key)
+        except AttributeError:
+            pass
+        return object.__getattribute__(self, key)
     
     def __setattr__(self, key, value):
         raise NotImplementedError("cannot set attributes")
