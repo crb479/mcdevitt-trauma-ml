@@ -11,6 +11,7 @@ import resource
 
 # pylint: disable=import-error,relative-beyond-top-level
 from mtml.modeling.vte.decomposition import whitened_pca
+from mtml.utils.functools import return_eval_record
 from mtml.utils.path import find_results_home_ascending, get_scratch_dir
 from mtml.utils.persist import persist_json, persist_pickle
 
@@ -49,18 +50,8 @@ if __name__ == "__main__":
     cluster.scale(jobs = 1)
     # initialize client with SLURMCluster
     client = Client(cluster)
-    # decorator that returns args, kwargs and result of function call. this
-    # should later become the decorator mtml.utils.functools.return_eval_record
-    # that returns a EvaluationRecord (inherits from dict; can access keys with
-    # __getattr__ but cannot set anything in the dictionary).
-    def return_eval_record(f):
-        
-        def _inner(*args, **kwargs):
-            res = f(*args, **kwargs)
-            return {"args": args, "kwargs": kwargs, "result": res}
-
-        return _inner
-    # submit decorated task to client and receive future
+    # submit decorated task to client and receive future. return_eval_record
+    # return an EvaluationRecord containing args, kwargs, and result.
     fut = client.submit(
         return_eval_record(task), report = True, stream = io.StringIO(),
         random_seed = 7
@@ -69,7 +60,7 @@ if __name__ == "__main__":
     # # node-qualified PID + max RSS of this process (master)
     while not fut.done():
         pass
-    print(fut.result()["kwargs"]["stream"].getvalue())
+    print(fut.result().kwargs["stream"].getvalue())
     node, pid = platform.node(), os.getpid()
     max_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     print(f"master host:PID,max_rss = {node}:{pid},{max_rss}K")
