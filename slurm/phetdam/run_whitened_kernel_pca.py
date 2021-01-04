@@ -52,7 +52,7 @@ if __name__ == "__main__":
                 "and local_directory args, which are hardcoded.")
     )
     arp.add_argument(
-        "-m", "--mmap-dir",
+        "-M", "--mmap-dir",
         help = ("Directory to dump numpy arrays to for reading using memory "
                 "mapping by joblib.load. if not provided, arrays are in-memory")
     )
