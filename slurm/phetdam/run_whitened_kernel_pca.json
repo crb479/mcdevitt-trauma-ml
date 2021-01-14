@@ -1,6 +1,6 @@
 {
     "cores": 6,
-    "memory": "15G",
+    "memory": "12G",
     "processes": 6,
     "walltime": "00:45:00"
 }
